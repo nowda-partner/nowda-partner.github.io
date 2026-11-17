@@ -2,7 +2,7 @@
 export const CONFIG = {
   // 앱스 스크립트 웹앱 주소(배포 후 받은 /exec 주소).
   // 비워 두면 "체험 모드"로 동작합니다(브라우저 안에서만 저장되는 예시 데이터).
-  API_URL: '',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwMqnavhMiu5CrGRkN0lxc2k4JkpVtiGDaK4q708Xaqvc5gtYWTJ69ozRNrtUE3yVsu/exec',
 
   SITE_NAME: '나우다 제휴사 안내',
   SITE_SHORT: '나우다 파트너',
