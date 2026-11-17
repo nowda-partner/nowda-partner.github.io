@@ -11,7 +11,6 @@ export function PartnerLogin() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  if (getSession('p')) { go('/'); return null; }
 
   const submit = async (e) => {
     e.preventDefault();

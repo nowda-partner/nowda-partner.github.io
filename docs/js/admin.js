@@ -10,7 +10,6 @@ export function AdminLogin() {
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  if (getSession('a')) { go('/admin'); return null; }
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr('');
