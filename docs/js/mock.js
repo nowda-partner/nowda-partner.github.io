@@ -151,12 +151,14 @@ const handlers = {
     const x = db.partners.find((y) => y.id === id);
     if (!x || !x.active || !x.code || x.code !== code) throw fail('업체ID 또는 접속코드가 맞지 않습니다. (체험: G001 / 12345678)');
     x.lastLogin = nowStr();
-    return { token: `mock:p:${id}`, partner: { id, name: x.name } };
+    const token = `mock:p:${id}`;
+    return { token, partner: { id, name: x.name }, home: handlers.home(db, {}, token) };
   },
   adminLogin(db, p) {
     const a = db.admins.find((x) => x.id === String(p.id || '').trim());
     if (!a || a.password !== p.password) throw fail('아이디 또는 비밀번호가 맞지 않습니다. (체험: admin / admin12345)');
-    return { token: `mock:a:${a.id}`, admin: { id: a.id, name: a.name } };
+    const token = `mock:a:${a.id}`;
+    return { token, admin: { id: a.id, name: a.name }, dashboard: handlers.adminDashboard(db, {}, token) };
   },
   home(db, p, t) {
     const me = needPartner(db, t);

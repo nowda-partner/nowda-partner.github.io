@@ -2,7 +2,9 @@
 import { html, render, useState, useEffect, currentPath, match, getSession, go, CONFIG } from './lib.js';
 import { Toaster } from './ui.js';
 import * as P from './partner.js';
-import * as A from './admin.js';
+
+// 관리자 화면 코드는 관리자 주소로 들어왔을 때만 내려받는다.
+let A = null;
 
 const PARTNER_ROUTES = [
   ['/', () => html`<${P.Home} />`],
@@ -60,6 +62,14 @@ function App() {
   }
 
   useEffect(() => { document.title = path.startsWith('/admin') ? '관리자 · ' + CONFIG.SITE_NAME : CONFIG.SITE_NAME; }, [path]);
+
+  const needAdmin = path.startsWith('/admin') && !A;
+  const [loadErr, setLoadErr] = useState(false);
+  useEffect(() => {
+    if (!needAdmin) return;
+    import('./admin.js').then((m) => { A = m; setTick((x) => x + 1); }, () => setLoadErr(true));
+  }, [needAdmin]);
+  if (needAdmin) return html`<div class="boot">${loadErr ? '화면을 불러오지 못했습니다. 새로고침해 주세요.' : '불러오는 중…'}</div>`;
 
   let view;
   if (path === '/admin/login') view = html`<${A.AdminLogin} />`;

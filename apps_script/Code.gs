@@ -36,9 +36,15 @@ var HEADERS = {
 
 var STATUS = { open: '접수', doing: '처리중', done: '답변완료' };
 
+// 서버 메모리(CacheService)에 기억해 두는 시간(초). 관리자 화면에서 고치면 바로 지우고,
+// 시트를 직접 고친 경우에는 이 시간이 지나면 반영된다.
+var CACHE_SEC = { content: 600, account: 300 };
+
 /* ───────────────────────── 웹앱 진입점 ───────────────────────── */
 
+/** 로그인 화면이 열릴 때 화면이 먼저 불러 서버를 깨운다. 자주 쓰는 자료도 미리 서버 메모리에 올려 둔다. */
 function doGet() {
+  try { partnerIndex_(); allNotices_(); } catch (e) { /* 미리 데우기 실패는 무시 */ }
   return json_({ ok: true, service: 'nowda-partner-api', time: now_() });
 }
 
@@ -98,7 +104,7 @@ var ACTIONS = {
   uploadNoticeFile: function (p, t) { needAdmin_(t); return uploadPublic_(p); },
   adminFaqs: function (p, t) { needAdmin_(t); return faqList_(true); },
   saveFaq: function (p, t) { needAdmin_(t); return saveFaq_(p); },
-  deleteFaq: function (p, t) { needAdmin_(t); return deleteRowById_(TABS.faq, p.id, 'FAQ'); },
+  deleteFaq: function (p, t) { needAdmin_(t); var r = deleteRowById_(TABS.faq, p.id, 'FAQ'); uncache_('faqs'); return r; },
   adminInquiries: function (p, t) { needAdmin_(t); return readRows_(TABS.inquiry).map(inquiryFromRow_).map(inquirySummary_).sort(byDateDesc_); },
   adminInquiry: function (p, t) { needAdmin_(t); return inquiryFromRow_(findById_(TABS.inquiry, p.id, '문의')); },
   answerInquiry: function (p, t) { var a = needAdmin_(t); return answerInquiry_(a, p); },
@@ -114,8 +120,9 @@ function partnerLogin_(id, code) {
   id = normId_(id);
   code = String(code || '').replace(/\D/g, '');
   if (!id || !code) throw new UserError('업체ID와 접속코드를 입력해 주세요.');
-  checkLock_('p:' + id);
-  var row = findPartnerRow_(id);
+  var fails = checkLock_('p:' + id);
+  var idx = partnerIndex_();
+  var row = idx.map[id];
   var ok = row && row['사용'] !== 'N' && row['해시'] && hash_('p|' + id + '|' + code) === row['해시'];
   log_('제휴사', id, ok ? '성공' : '실패');
   if (!ok) {
@@ -124,30 +131,32 @@ function partnerLogin_(id, code) {
       ? '업체ID 또는 접속코드가 맞지 않습니다. (' + left + '번 더 틀리면 ' + LOCK_MINUTES + '분 동안 잠깁니다)'
       : '여러 번 틀려서 ' + LOCK_MINUTES + '분 동안 잠겼습니다. 잠시 후 다시 시도해 주세요.');
   }
-  clearFail_('p:' + id);
-  updateCells_(TABS.partner, row._row, { '마지막접속': now_() });
-  invalidatePartners_();
+  if (fails) clearFail_('p:' + id);
+  touchPartner_(idx, id);
+  var me = { id: id, name: row['업체명'] };
   return {
     token: sign_({ r: 'p', id: id, v: String(row['해시']).slice(0, 10), exp: Date.now() + SESSION_HOURS * 3600e3 }),
-    partner: { id: id, name: row['업체명'] }
+    partner: me,
+    home: partnerHome_(me) // 로그인 직후 홈을 다시 요청하지 않도록 같이 보낸다
   };
 }
 
 function adminLogin_(id, password) {
   id = String(id || '').trim();
   if (!id || !password) throw new UserError('아이디와 비밀번호를 입력해 주세요.');
-  checkLock_('a:' + id);
-  var row = readRows_(TABS.admin).filter(function (r) { return String(r['아이디']).trim() === id; })[0];
+  var fails = checkLock_('a:' + id);
+  var row = adminMap_()[id];
   var ok = row && row['사용'] !== 'N' && row['해시'] && hash_('a|' + id + '|' + password) === row['해시'];
   log_('관리자', id, ok ? '성공' : '실패');
   if (!ok) {
     var left = addFail_('a:' + id);
     throw new UserError(left > 0 ? '아이디 또는 비밀번호가 맞지 않습니다.' : '여러 번 틀려서 ' + LOCK_MINUTES + '분 동안 잠겼습니다.');
   }
-  clearFail_('a:' + id);
+  if (fails) clearFail_('a:' + id);
   return {
     token: sign_({ r: 'a', id: id, name: row['이름'], v: String(row['해시']).slice(0, 10), exp: Date.now() + SESSION_HOURS * 3600e3 }),
-    admin: { id: id, name: row['이름'] }
+    admin: { id: id, name: row['이름'] },
+    dashboard: adminDashboard_()
   };
 }
 
@@ -164,7 +173,7 @@ function needPartner_(token) {
 function needAdmin_(token) {
   var s = verify_(token);
   if (!s || s.r !== 'a') throw new UserError('관리자 로그인이 필요합니다.', 'AUTH');
-  var row = readRows_(TABS.admin).filter(function (r) { return String(r['아이디']).trim() === s.id; })[0];
+  var row = adminMap_()[s.id];
   if (!row || row['사용'] === 'N' || String(row['해시']).slice(0, 10) !== s.v) {
     throw new UserError('관리자 정보가 바뀌었습니다. 다시 로그인해 주세요.', 'AUTH');
   }
@@ -197,9 +206,11 @@ function hash_(text) {
   return b.map(function (x) { return ('0' + (x & 0xff).toString(16)).slice(-2); }).join('');
 }
 
+/** 잠겼으면 막고, 아니면 지금까지 틀린 횟수를 돌려준다. */
 function checkLock_(key) {
   var n = Number(CacheService.getScriptCache().get('fail:' + key) || 0);
   if (n >= LOCK_FAILS) throw new UserError('여러 번 틀려서 잠겼습니다. ' + LOCK_MINUTES + '분 뒤에 다시 시도해 주세요.');
+  return n;
 }
 
 function addFail_(key) {
@@ -249,11 +260,18 @@ function partnerHome_(me) {
   };
 }
 
+/** 소식 전체(본문 제외). 서버 메모리에 기억해 두고, 소식을 저장·삭제하면 지운다. 조회수는 늦게 반영될 수 있다. */
+function allNotices_() {
+  return cached_('notices', function () { return readRows_(TABS.notice).map(noticeFromRow_); }, CACHE_SEC.content);
+}
+
+function isLive_(n, t) {
+  return !n.hidden && (!n.start || n.start <= t) && (!n.end || n.end >= t);
+}
+
 function visibleNotices_() {
   var t = now_();
-  return readRows_(TABS.notice).map(noticeFromRow_).filter(function (n) {
-    return !n.hidden && (!n.start || n.start <= t) && (!n.end || n.end >= t);
-  }).sort(function (a, b) {
+  return allNotices_().filter(function (n) { return isLive_(n, t); }).sort(function (a, b) {
     var pa = (a.pinned || a.urgent) ? 1 : 0;
     var pb = (b.pinned || b.urgent) ? 1 : 0;
     if (pa !== pb) return pb - pa;
@@ -266,11 +284,11 @@ function displayDate_(n) {
 }
 
 function partnerNotice_(id) {
-  var n = visibleNotices_().filter(function (x) { return String(x.id) === String(id); })[0];
-  if (!n) throw new UserError('게시 기간이 지났거나 없는 글입니다.');
-  var row = findById_(TABS.notice, id, '소식');
+  var table = readTable_(TABS.notice);
+  var row = table.rows.filter(function (r) { return String(r['ID']) === String(id); })[0];
+  if (!row || !isLive_(noticeFromRow_(row), now_())) throw new UserError('게시 기간이 지났거나 없는 글입니다.');
   row['조회수'] = String(Number(row['조회수'] || 0) + 1);
-  updateCells_(TABS.notice, row._row, { '조회수': row['조회수'] });
+  setCell_(table, row._row, '조회수', row['조회수']);
   return noticeDetail_(row);
 }
 
@@ -351,6 +369,7 @@ function saveNotice_(admin, p) {
     appendObj_(TABS.notice, values);
     return { id: values['ID'] };
   } finally {
+    uncache_('notices');
     lock.releaseLock();
   }
 }
@@ -361,7 +380,9 @@ function deleteNotice_(id) {
   if (ref.indexOf('file:') === 0) {
     try { DriveApp.getFileById(ref.slice(5)).setTrashed(true); } catch (e) { /* 이미 지워진 파일 */ }
   }
-  return deleteRowById_(TABS.notice, id, '소식');
+  var res = deleteRowById_(TABS.notice, id, '소식');
+  uncache_('notices');
+  return res;
 }
 
 /** 본문이 길면(셀 한도 5만 자) 드라이브 파일로 저장하고 셀에는 file:ID만 남긴다. */
@@ -405,13 +426,15 @@ function firstImage_(body) {
 /* ───────────────────────── FAQ ───────────────────────── */
 
 function faqList_(includeHidden) {
-  return readRows_(TABS.faq).map(function (r) {
-    return {
-      id: String(r['ID']), category: r['분류'], question: r['질문'], answer: r['답변'],
-      order: Number(r['순서'] || 0), hidden: r['숨김'] === 'Y', updatedAt: r['수정일']
-    };
-  }).filter(function (f) { return includeHidden || !f.hidden; })
-    .sort(function (a, b) { return a.order - b.order || Number(a.id) - Number(b.id); });
+  var all = cached_('faqs', function () {
+    return readRows_(TABS.faq).map(function (r) {
+      return {
+        id: String(r['ID']), category: r['분류'], question: r['질문'], answer: r['답변'],
+        order: Number(r['순서'] || 0), hidden: r['숨김'] === 'Y', updatedAt: r['수정일']
+      };
+    }).sort(function (a, b) { return a.order - b.order || Number(a.id) - Number(b.id); });
+  }, CACHE_SEC.content);
+  return all.filter(function (f) { return includeHidden || !f.hidden; });
 }
 
 function saveFaq_(p) {
@@ -433,6 +456,7 @@ function saveFaq_(p) {
     appendObj_(TABS.faq, values);
     return { id: values['ID'] };
   } finally {
+    uncache_('faqs');
     lock.releaseLock();
   }
 }
@@ -455,9 +479,12 @@ function inquirySummary_(q) {
   };
 }
 
+/** 업체별 문의 목록. 서버 메모리에 기억해 두고, 새 문의나 답변이 생기면 그 업체 것만 지운다. */
 function myInquiries_(me) {
-  return readRows_(TABS.inquiry).filter(function (r) { return normId_(r['업체ID']) === me.id; })
-    .map(inquiryFromRow_).map(inquirySummary_).sort(byDateDesc_);
+  return cached_('inq:' + me.id, function () {
+    return readRows_(TABS.inquiry).filter(function (r) { return normId_(r['업체ID']) === me.id; })
+      .map(inquiryFromRow_).map(inquirySummary_).sort(byDateDesc_);
+  }, CACHE_SEC.content);
 }
 
 function inquiryForPartner_(me, id) {
@@ -486,6 +513,7 @@ function createInquiry_(me, p) {
     });
     return { id: id };
   } finally {
+    uncache_('inq:' + me.id);
     lock.releaseLock();
   }
 }
@@ -499,6 +527,7 @@ function answerInquiry_(admin, p) {
     values['답변일'] = now_();
   }
   updateCells_(TABS.inquiry, row._row, values);
+  uncache_('inq:' + normId_(row['업체ID']));
   return { id: String(p.id) };
 }
 
@@ -556,6 +585,7 @@ function folder_(name) {
   var it = root.getFoldersByName(name);
   var f = it.hasNext() ? it.next() : root.createFolder(name);
   PropertiesService.getScriptProperties().setProperty(key, f.getId());
+  if (PROPS_) PROPS_[key] = f.getId();
   return f;
 }
 
@@ -563,10 +593,11 @@ function folder_(name) {
 
 function adminDashboard_() {
   var t = now_();
-  var notices = readRows_(TABS.notice).map(noticeFromRow_);
-  var live = notices.filter(function (n) { return !n.hidden && (!n.start || n.start <= t) && (!n.end || n.end >= t); });
+  var notices = allNotices_();
+  var live = notices.filter(function (n) { return isLive_(n, t); });
   var inquiries = readRows_(TABS.inquiry).map(inquiryFromRow_);
-  var partners = partnerList_();
+  var pmap = partnerMap_();
+  var partners = Object.keys(pmap).map(function (id) { return { issued: !!pmap[id]['해시'] }; });
   return {
     counts: {
       openInquiries: inquiries.filter(function (q) { return q.status !== STATUS.done; }).length,
@@ -657,6 +688,11 @@ function sheet_(name) {
 }
 
 function readRows_(name) {
+  return readTable_(name).rows;
+}
+
+/** 시트 전체를 한 번 읽어 머리글과 행을 함께 돌려준다. */
+function readTable_(name) {
   var sh = sheet_(name);
   var data = sh.getDataRange().getValues();
   var head = data[0];
@@ -673,7 +709,13 @@ function readRows_(name) {
     }
     if (!empty) rows.push(o);
   }
-  return rows;
+  return { sheet: sh, head: head, rows: rows };
+}
+
+/** 칸 하나만 쓴다(readTable_로 읽은 머리글 사용). */
+function setCell_(table, rowNum, col, value) {
+  var j = table.head.indexOf(col);
+  if (j >= 0) table.sheet.getRange(rowNum, j + 1).setValue(value);
 }
 
 function findById_(name, id, label) {
@@ -725,31 +767,106 @@ function findPartnerRow_(id) {
   return readRows_(TABS.partner).filter(function (r) { return normId_(r['업체ID']) === id; })[0] || null;
 }
 
+/** 업체 목록(로그인·권한 확인용)과 업체 탭 머리글. 서버 메모리에 기억해 둔다. */
+function partnerIndex_() {
+  return cached_('partners', function () {
+    var t = readTable_(TABS.partner);
+    var map = {};
+    t.rows.forEach(function (r) {
+      var id = normId_(r['업체ID']);
+      if (id) map[id] = { '업체명': r['업체명'], '사용': r['사용'], '해시': r['해시'], _row: r._row };
+    });
+    return { head: t.head, map: map };
+  }, CACHE_SEC.account);
+}
+
 function partnerMap_() {
-  var c = CacheService.getScriptCache();
-  var hit = c.get('partners');
-  if (hit) return JSON.parse(hit);
-  var map = {};
-  readRows_(TABS.partner).forEach(function (r) {
-    var id = normId_(r['업체ID']);
-    if (id) map[id] = { '업체명': r['업체명'], '사용': r['사용'], '해시': r['해시'] };
-  });
-  try { c.put('partners', JSON.stringify(map), 300); } catch (e) { /* 캐시 한도 초과 시 무시 */ }
-  return map;
+  return partnerIndex_().map;
 }
 
 function invalidatePartners_() {
-  CacheService.getScriptCache().remove('partners');
+  uncache_('partners');
+}
+
+/** 로그인한 업체의 마지막접속 칸만 쓴다. 기억해 둔 행 번호가 맞는지 먼저 확인한다. */
+function touchPartner_(idx, id) {
+  try {
+    var sh = sheet_(TABS.partner);
+    var cId = idx.head.indexOf('업체ID'), cLast = idx.head.indexOf('마지막접속');
+    if (cId < 0 || cLast < 0) return;
+    var r = idx.map[id]._row;
+    if (normId_(sh.getRange(r, cId + 1).getValue()) !== id) {
+      invalidatePartners_(); // 시트에서 행을 옮기거나 지운 경우
+      var row = findPartnerRow_(id);
+      if (!row) return;
+      r = row._row;
+    }
+    sh.getRange(r, cLast + 1).setValue(now_());
+  } catch (e) { /* 마지막접속 기록 실패는 로그인에 영향 주지 않음 */ }
+}
+
+/** 관리자 목록. 서버 메모리에 기억해 두고, 시트 메뉴에서 관리자를 바꾸면 지운다. */
+function adminMap_() {
+  return cached_('admins', function () {
+    var map = {};
+    readRows_(TABS.admin).forEach(function (r) {
+      var id = String(r['아이디']).trim();
+      if (id) map[id] = { '이름': r['이름'], '사용': r['사용'], '해시': r['해시'] };
+    });
+    return map;
+  }, CACHE_SEC.account);
+}
+
+/**
+ * 서버 메모리(CacheService)에 JSON으로 기억한다. 값 하나의 한도(100KB)를 넘지 않도록 나눠 저장한다.
+ * 기억이 없거나 깨졌으면 build()로 다시 만든다.
+ */
+var CACHE_PART = 30000; // 글자 수(한글 3바이트 기준 약 90KB)
+
+function cached_(key, build, seconds) {
+  var c = CacheService.getScriptCache();
+  try {
+    var got = c.getAll([key + ':n', key + ':0']);
+    var n = Number(got[key + ':n'] || 0);
+    if (n && got[key + ':0'] != null) {
+      var text = got[key + ':0'];
+      if (n > 1) {
+        var keys = [];
+        for (var i = 1; i < n; i++) keys.push(key + ':' + i);
+        var more = c.getAll(keys);
+        for (var j = 0; j < keys.length && text !== null; j++) text = more[keys[j]] == null ? null : text + more[keys[j]];
+      }
+      if (text !== null) return JSON.parse(text);
+    }
+  } catch (e) { /* 기억이 깨졌으면 다시 만든다 */ }
+  var value = build();
+  try {
+    var s = JSON.stringify(value), parts = {}, k = 0;
+    for (var p = 0; p < s.length; p += CACHE_PART) parts[key + ':' + (k++)] = s.slice(p, p + CACHE_PART);
+    if (k <= 30) {
+      parts[key + ':n'] = String(k);
+      c.putAll(parts, seconds);
+    }
+  } catch (e) { /* 한도를 넘으면 기억하지 않고 매번 시트에서 읽는다 */ }
+  return value;
+}
+
+function uncache_(key) {
+  CacheService.getScriptCache().remove(key + ':n');
 }
 
 function log_(kind, id, result) {
   try {
-    appendObj_(TABS.log, { '시각': now_(), '구분': kind, '아이디': id, '결과': result });
+    sheet_(TABS.log).appendRow([now_(), kind, id, result]); // 시각·구분·아이디·결과 순서
   } catch (e) { /* 기록 실패는 로그인에 영향 주지 않음 */ }
 }
 
+// 스크립트 속성은 한 번 실행하는 동안 한 번만 읽는다.
+var PROPS_ = null;
+
 function prop_(key, optional) {
-  var v = PropertiesService.getScriptProperties().getProperty(key);
+  if (!PROPS_) PROPS_ = PropertiesService.getScriptProperties().getProperties();
+  var v = PROPS_[key];
   if (!v && !optional) throw new UserError('초기 설정이 끝나지 않았습니다. 시트 메뉴 [나우다 포털 → 처음 설정]을 실행해 주세요.');
   return v;
 }
@@ -805,7 +922,8 @@ function setup() {
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('SECRET')) props.setProperty('SECRET', Utilities.getUuid() + Utilities.getUuid());
   if (!props.getProperty('SALT')) props.setProperty('SALT', Utilities.getUuid());
-  ['이미지', '첨부', '본문'].forEach(folder_);
+  PROPS_ = null;
+  ['이미지', '첨부', '본문'].forEach(function (name) { folder_(name); });
 
   SpreadsheetApp.getUi().alert(
     '설정을 마쳤습니다.\n\n' +
@@ -831,6 +949,7 @@ function setAdmin() {
   var values = { '이름': r2.getResponseText().trim() || id, '해시': hash_('a|' + id + '|' + pw), '사용': 'Y' };
   if (row) updateCells_(TABS.admin, row._row, values);
   else { values['아이디'] = id; appendObj_(TABS.admin, values); }
+  uncache_('admins');
   ui.alert(id + ' 관리자 계정을 저장했습니다.');
 }
 

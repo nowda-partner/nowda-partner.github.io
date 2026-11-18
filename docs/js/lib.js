@@ -30,6 +30,41 @@ export function setSession(role, data, keep) {
 
 export function clearSession(role) {
   try { sessionStorage.removeItem(KEY[role]); localStorage.removeItem(KEY[role]); } catch { /* 무시 */ }
+  memo.clear();
+  clearStash(role);
+}
+
+/* ── 받아 둔 결과 보관 ─────────────────────────
+   마지막으로 받은 화면 내용을 로그인 정보와 같은 저장소에 보관해 두었다가,
+   다시 들어오면 먼저 보여 주고 최신 내용은 뒤에서 받는다. 로그아웃하면 지운다. */
+const STASH_KEY = { p: 'np_cache_partner', a: 'np_cache_admin' };
+const STASH_MAX = 40; // 보관할 화면 수(오래된 것부터 버림)
+
+function sessionStore(role) {
+  for (const store of [sessionStorage, localStorage]) {
+    try { if (store.getItem(KEY[role])) return store; } catch { /* 저장소 사용 불가 */ }
+  }
+  return null;
+}
+
+function readStash(role) {
+  try {
+    const store = sessionStore(role);
+    return store ? JSON.parse(store.getItem(STASH_KEY[role]) || '{}') : {};
+  } catch { return {}; }
+}
+
+function writeStash(role, key, v) {
+  const store = sessionStore(role);
+  if (!store) return;
+  const all = readStash(role);
+  all[key] = { t: Date.now(), v };
+  Object.keys(all).sort((a, b) => all[b].t - all[a].t).slice(STASH_MAX).forEach((k) => delete all[k]);
+  try { store.setItem(STASH_KEY[role], JSON.stringify(all)); } catch { try { store.removeItem(STASH_KEY[role]); } catch { /* 무시 */ } }
+}
+
+function clearStash(role) {
+  try { sessionStorage.removeItem(STASH_KEY[role]); localStorage.removeItem(STASH_KEY[role]); } catch { /* 무시 */ }
 }
 
 /* ── API ──────────────────────────────────────── */
@@ -54,11 +89,45 @@ async function send(action, payload, token) {
   try { return await res.json(); } catch { return { ok: false, error: '서버 응답을 읽지 못했습니다.' }; }
 }
 
-// 요청 결과를 잠깐 기억해 같은 화면을 다시 열 때 빠르게 보여 줌
+// 요청 결과를 기억해 같은 화면을 다시 열 때 빠르게 보여 줌
 const memo = new Map();
 
+// 읽기만 하는 요청. 이 밖의 요청(저장·수정·삭제·로그인)이 성공하면 기억한 결과를 모두 지운다.
+const READS = new Set([
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'file', 'uploadImage', 'uploadNoticeFile',
+  'adminDashboard', 'adminNotices', 'adminNotice', 'adminFaqs', 'adminInquiries', 'adminInquiry', 'adminPartners',
+]);
+// 결과를 보관해 두었다가 다시 들어올 때 먼저 보여 줄 요청
+const STASHED = new Set([
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry',
+  'adminDashboard', 'adminNotices', 'adminFaqs', 'adminInquiries', 'adminPartners',
+]);
+
+const keyOf = (role, action, payload) => role + ':' + action + ':' + JSON.stringify(payload);
+
+/** 기억하거나 보관해 둔 결과(오래됐을 수 있음). 없으면 undefined */
+export function peek(role, action, payload = {}) {
+  const key = keyOf(role, action, payload);
+  return memo.has(key) ? memo.get(key).v : readStash(role)[key]?.v;
+}
+
+/** 서버가 미리 보내 준 결과를 기억해 둔다(예: 로그인 응답에 담긴 홈 내용). */
+export function seed(role, action, payload, data) {
+  const key = keyOf(role, action, payload);
+  memo.set(key, { t: Date.now(), v: data });
+  writeStash(role, key, data);
+}
+
+/** 로그인 화면이 열리면 서버를 미리 깨운다(오래 쉬었다가 처음 요청하면 느리기 때문). */
+let warmed = false;
+export function warmUp() {
+  if (IS_MOCK || warmed) return;
+  warmed = true;
+  fetch(CONFIG.API_URL, { mode: 'no-cors' }).catch(() => { warmed = false; });
+}
+
 export async function api(role, action, payload = {}, opts = {}) {
-  const key = role + ':' + action + ':' + JSON.stringify(payload);
+  const key = keyOf(role, action, payload);
   if (opts.cache && memo.has(key) && Date.now() - memo.get(key).t < opts.cache) return memo.get(key).v;
   const s = role ? getSession(role) : null;
   const res = await send(action, payload, s?.token || '');
@@ -69,8 +138,14 @@ export async function api(role, action, payload = {}, opts = {}) {
     }
     throw new Error(res.error || '요청을 처리하지 못했습니다.');
   }
-  if (opts.cache) memo.set(key, { t: Date.now(), v: res.data });
-  else if (!opts.keepCache) memo.clear(); // 저장·수정 뒤에는 기억한 결과를 비움
+  if (!READS.has(action)) {
+    memo.clear(); // 저장·수정 뒤에는 기억한 결과를 비움
+    clearStash('p');
+    clearStash('a');
+  } else if (role && STASHED.has(action)) {
+    memo.set(key, { t: Date.now(), v: res.data });
+    writeStash(role, key, res.data);
+  }
   return res.data;
 }
 

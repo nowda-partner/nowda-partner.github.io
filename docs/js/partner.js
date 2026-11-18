@@ -1,6 +1,6 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js';
-import { useLoad, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js';
 import { renderBlocks, plain } from './render.js';
 
 /* ───────── 로그인 ───────── */
@@ -10,7 +10,7 @@ export function PartnerLogin() {
   const [keep, setKeep] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-
+  useEffect(() => warmUp(), []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -18,6 +18,7 @@ export function PartnerLogin() {
     try {
       const r = await api(null, 'login', { id, code });
       setSession('p', { token: r.token, partner: r.partner }, keep);
+      if (r.home) seed('p', 'home', {}, r.home); // 홈을 다시 요청하지 않음
       go('/');
     } catch (e2) {
       setErr(e2.message);
@@ -120,7 +121,7 @@ function Popups({ items }) {
 
 /* ───────── 홈 ───────── */
 export function Home() {
-  const st = useLoad(() => api('p', 'home', {}, { cache: 30000 }));
+  const st = useApi('p', 'home', {}, { cache: 30000 });
   return html`<${Load} state=${st}>${(d) => html`
     <${Popups} items=${d.popups} />
     ${d.urgent.length > 0 && html`
@@ -169,7 +170,7 @@ function NoticeRow({ n }) {
 
 /* ───────── 소식 목록 ───────── */
 export function Notices() {
-  const st = useLoad(() => api('p', 'notices', {}, { cache: 30000 }));
+  const st = useApi('p', 'notices', {}, { cache: 30000 });
   const [cat, setCat] = useState('전체');
   const [q, setQ] = useState('');
   const [view, setView] = useState(() => storeGet('np_notice_view', 'list'));
@@ -215,7 +216,7 @@ export function Notices() {
 
 /* ───────── 소식 보기 ───────── */
 export function NoticeDetail({ id }) {
-  const st = useLoad(() => api('p', 'notice', { id }), [id]);
+  const st = useApi('p', 'notice', { id });
   return html`<${Load} state=${st}>${(n) => html`
     <article class="article">
       <a href="#/notices" class="back">← 소식 목록</a>
@@ -238,7 +239,7 @@ export function Attachments({ files }) {
 
 /* ───────── FAQ ───────── */
 export function Faq() {
-  const st = useLoad(() => api('p', 'faqs', {}, { cache: 60000 }));
+  const st = useApi('p', 'faqs', {}, { cache: 60000 });
   const [cat, setCat] = useState('전체');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(null);
@@ -266,7 +267,7 @@ export function Faq() {
 
 /* ───────── 1:1 문의 ───────── */
 export function Inquiries() {
-  const st = useLoad(() => api('p', 'myInquiries'));
+  const st = useApi('p', 'myInquiries');
   return html`
     <div class="page-head"><h1>1:1 문의</h1><a class="btn primary" href="#/inquiries/new">문의 남기기</a></div>
     <p class="muted page-desc">정보 수정 요청, 의견, 궁금한 점을 남겨 주시면 나우다 운영팀이 답변해 드립니다. 내가 남긴 문의만 보입니다.</p>
@@ -344,7 +345,7 @@ export function InquiryNew() {
 }
 
 export function InquiryDetail({ id }) {
-  const st = useLoad(() => api('p', 'inquiry', { id }), [id]);
+  const st = useApi('p', 'inquiry', { id });
   return html`
     <a href="#/inquiries" class="back">← 1:1 문의</a>
     <${Load} state=${st}>${(q) => html`<${InquiryView} q=${q} role="p" />`}</${Load}>`;
@@ -355,7 +356,7 @@ export function InquiryView({ q, role, showPartner }) {
   const download = async (f) => {
     setBusyFile(f.id);
     try {
-      const r = await api(role, 'file', { inquiryId: q.id, fileId: f.id }, { keepCache: true });
+      const r = await api(role, 'file', { inquiryId: q.id, fileId: f.id });
       downloadBase64(r.name, r.mime, r.data);
     } catch (e) {
       toast(e.message, 'err');

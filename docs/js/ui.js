@@ -1,9 +1,12 @@
 // 공통 화면 조각
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl } from './lib.js';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl, api, peek } from './lib.js';
 
-/** 데이터를 불러오는 동안·실패했을 때 화면을 대신 그려 주는 도우미 */
-export function useLoad(fn, deps = []) {
-  const [state, setState] = useState({ loading: true, error: '', data: null });
+/**
+ * 데이터를 불러오는 동안·실패했을 때 화면을 대신 그려 주는 도우미.
+ * peekFn이 있으면 받아 둔 결과를 먼저 보여 주고, 최신 결과가 오면 바꾼다.
+ */
+export function useLoad(fn, deps = [], peekFn) {
+  const [state, setState] = useState(() => ({ loading: true, error: '', data: peekFn?.() ?? null }));
   const [tick, setTick] = useState(0);
   const depKey = useRef(null);
   useEffect(() => {
@@ -11,14 +14,28 @@ export function useLoad(fn, deps = []) {
     const key = JSON.stringify(deps);
     const sameTarget = depKey.current === key; // 같은 대상을 다시 불러올 때만 이전 화면 유지
     depKey.current = key;
-    setState((s) => ({ loading: true, error: '', data: sameTarget ? s.data : null }));
+    const early = peekFn?.() ?? null;
+    setState((s) => ({ loading: true, error: '', data: early ?? (sameTarget ? s.data : null) }));
     fn().then(
       (data) => alive && setState({ loading: false, error: '', data }),
-      (e) => alive && setState({ loading: false, error: e.message, data: null }),
+      (e) => {
+        if (!alive) return;
+        if (early) { // 받아 둔 화면은 그대로 두고 알림만 띄운다
+          toast(e.message, 'err');
+          setState({ loading: false, error: '', data: early });
+        } else {
+          setState({ loading: false, error: e.message, data: null });
+        }
+      },
     );
     return () => { alive = false; };
   }, [...deps, tick]);
   return { ...state, reload: () => setTick((x) => x + 1) };
+}
+
+/** 서버 요청 + 받아 둔 결과 먼저 보여 주기 */
+export function useApi(role, action, payload = {}, opts = {}) {
+  return useLoad(() => api(role, action, payload, opts), [JSON.stringify(payload)], () => peek(role, action, payload));
 }
 
 export function Loading({ text = '불러오는 중…' }) {

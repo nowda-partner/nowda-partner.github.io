@@ -23,7 +23,7 @@ async function loadLibs() {
 
 async function uploadFile(file) {
   const img = await compressImage(file);
-  const r = await api('a', 'uploadImage', img, { keepCache: true });
+  const r = await api('a', 'uploadImage', img);
   return { success: 1, file: { url: r.url, id: r.id } };
 }
 

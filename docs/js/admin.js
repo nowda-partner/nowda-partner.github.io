@@ -1,6 +1,6 @@
 // 관리자 화면
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js';
-import { useLoad, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js';
+import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js';
 import { InquiryView, Attachments } from './partner.js';
 import { renderBlocks } from './render.js';
 
@@ -10,12 +10,14 @@ export function AdminLogin() {
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  useEffect(() => warmUp(), []);
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
       const r = await api(null, 'adminLogin', { id, password: pw });
       setSession('a', { token: r.token, admin: r.admin }, false);
+      if (r.dashboard) seed('a', 'adminDashboard', {}, r.dashboard); // 대시보드를 다시 요청하지 않음
       go('/admin');
     } catch (e2) {
       setErr(e2.message);
@@ -66,7 +68,7 @@ export function AdminShell({ path, children }) {
 
 /* ───────── 대시보드 ───────── */
 export function Dashboard() {
-  const st = useLoad(() => api('a', 'adminDashboard'));
+  const st = useApi('a', 'adminDashboard', {}, { cache: 30000 });
   return html`
     <div class="page-head"><h1>대시보드</h1><a class="btn primary" href="#/admin/notices/new">새 소식 쓰기</a></div>
     <${Load} state=${st}>${(d) => html`
@@ -94,7 +96,7 @@ function noticeState(n) {
 }
 
 export function AdminNotices() {
-  const st = useLoad(() => api('a', 'adminNotices'));
+  const st = useApi('a', 'adminNotices');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const size = 20;
@@ -160,7 +162,7 @@ function NoticeForm({ initial }) {
     if (!file) return;
     setBusy(key);
     try {
-      const r = await api('a', 'uploadImage', await compressImage(file), { keepCache: true });
+      const r = await api('a', 'uploadImage', await compressImage(file));
       setF((x) => ({ ...x, [key]: r.url }));
     } catch (e2) { toast(e2.message, 'err'); } finally { setBusy(''); }
   };
@@ -172,7 +174,7 @@ function NoticeForm({ initial }) {
     try {
       for (const file of files) {
         if (file.size > 10 * 1024 * 1024) throw new Error(file.name + ': 10MB 이하만 올릴 수 있습니다.');
-        const r = await api('a', 'uploadNoticeFile', { name: file.name, mime: file.type || 'application/octet-stream', data: await fileToBase64(file) }, { keepCache: true });
+        const r = await api('a', 'uploadNoticeFile', { name: file.name, mime: file.type || 'application/octet-stream', data: await fileToBase64(file) });
         setF((x) => ({ ...x, attachments: [...(x.attachments || []), { id: r.id, name: r.name, size: r.size, url: r.url, download: r.download }] }));
       }
     } catch (e2) { toast(e2.message, 'err'); } finally { setBusy(''); }
@@ -280,7 +282,7 @@ function NoticeForm({ initial }) {
 
 /* ───────── FAQ 관리 ───────── */
 export function AdminFaq() {
-  const st = useLoad(() => api('a', 'adminFaqs'));
+  const st = useApi('a', 'adminFaqs');
   const [edit, setEdit] = useState(null);
   return html`
     <div class="page-head"><h1>FAQ 관리</h1><button class="btn primary" onClick=${() => setEdit({ category: CONFIG.FAQ_CATEGORIES[0], question: '', answer: '', order: ((st.data || []).reduce((m, f) => Math.max(m, f.order), 0) + 1), hidden: false })}>FAQ 추가</button></div>
@@ -346,7 +348,7 @@ function InquiryTable({ list }) {
 }
 
 export function AdminInquiries() {
-  const st = useLoad(() => api('a', 'adminInquiries'));
+  const st = useApi('a', 'adminInquiries');
   const [status, setStatus] = useState('대기');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
@@ -402,7 +404,7 @@ function AnswerForm({ q, onSaved }) {
 
 /* ───────── 제휴사 관리 ───────── */
 export function AdminPartners() {
-  const st = useLoad(() => api('a', 'adminPartners'));
+  const st = useApi('a', 'adminPartners');
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('전체');
   const [sel, setSel] = useState(new Set());
