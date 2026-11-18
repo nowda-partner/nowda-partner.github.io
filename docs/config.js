@@ -5,7 +5,7 @@ export const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbwMqnavhMiu5CrGRkN0lxc2k4JkpVtiGDaK4q708Xaqvc5gtYWTJ69ozRNrtUE3yVsu/exec',
 
   SITE_NAME: '나우다 제휴사 안내',
-  SITE_SHORT: '나우다 파트너',
+  SITE_SHORT: '나우다 제휴사',
 
   // 소식 분류
   NOTICE_CATEGORIES: ['일반', '시스템', '정산', '이벤트', '운영'],
