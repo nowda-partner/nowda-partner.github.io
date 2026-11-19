@@ -1,8 +1,10 @@
 // 나우다 인스타그램 게시물 (홈 오른쪽 카드 + 관리자 미리보기에서 함께 씀)
 // 관리자는 게시물 주소만 저장한다. 사진은 인스타그램 공식 퍼가기(embed)로 불러온다.
-import { html, useState, useEffect, useRef, CONFIG } from './lib.js?v=202611200029';
+import { html, useState, useEffect, useRef, CONFIG } from './lib.js?v=202611200042';
 
-const ROLL_MS = 6000; // 다음 게시물로 넘어가는 간격
+const ROLL_MS = 3000; // 다음 게시물로 넘어가는 간격
+// 퍼가기 창에서 사진 위(프로필 줄)와 아래(좋아요·댓글 칸) 높이. 이만큼 잘라 내고 사진만 보여 준다.
+const CROP_TOP = 54, CROP_BOTTOM = 154;
 
 /** 게시물 주소 → 공식 퍼가기 주소(사진만). 게시물 주소가 아니면 ''. */
 export function igEmbedUrl(u) {
@@ -10,7 +12,8 @@ export function igEmbedUrl(u) {
   return m ? `https://www.instagram.com/${m[1].toLowerCase() === 'reel' ? 'reel' : 'p'}/${m[2]}/embed/` : '';
 }
 
-/* 퍼가기 창은 자기 높이를 postMessage로 알려 준다. 그 높이에 맞춰 창 크기를 바꾼다. */
+/* 퍼가기 창은 자기 높이를 postMessage로 알려 준다. 그 높이에 맞춰 창 크기를 바꾸고,
+ * 바깥 틀은 사진 높이(전체 - 위 - 아래)만큼만 보이게 한다. */
 const frames = new Set();
 let listening = false;
 function listen() {
@@ -24,7 +27,11 @@ function listen() {
     try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
     const h = d?.type === 'MEASURE' && Number(d.details?.height);
     if (!h) return;
-    for (const f of frames) if (f.contentWindow === e.source) f.style.height = h + 'px';
+    for (const f of frames) {
+      if (f.contentWindow !== e.source) continue;
+      f.style.height = h + 'px';
+      if (h > CROP_TOP + CROP_BOTTOM + 50) f.parentElement.style.height = (h - CROP_TOP - CROP_BOTTOM) + 'px';
+    }
   });
 }
 
@@ -38,8 +45,8 @@ export function IgFrame({ url, title, eager }) {
   }, []);
   const src = igEmbedUrl(url);
   if (!src) return null;
-  return html`<iframe ref=${ref} class="ig-frame" src=${src} title=${title || '나우다 인스타그램 게시물'}
-    loading=${eager ? 'eager' : 'lazy'} scrolling="no" allowtransparency="true"></iframe>`;
+  return html`<div class="ig-crop"><iframe ref=${ref} class="ig-frame" src=${src} title=${title || '나우다 인스타그램 게시물'}
+    loading=${eager ? 'eager' : 'lazy'} scrolling="no" allowtransparency="true" style=${{ marginTop: -CROP_TOP + 'px' }}></iframe></div>`;
 }
 
 /* ───────── 홈 오른쪽: 한 게시물씩 돌아가는 카드 ───────── */
@@ -68,7 +75,7 @@ export function InstagramCard({ posts }) {
     <div class="ig-stage" onMouseEnter=${() => setPause(true)} onMouseLeave=${() => setPause(false)}
       onfocusin=${() => setPause(true)} onfocusout=${() => setPause(false)}>
       ${list.map((p, i) => html`<div key=${p.id || p.url} class=${'ig-slide' + (i === cur ? ' on' : '')} aria-hidden=${i !== cur}>
-        <${IgFrame} url=${p.url} eager=${i === 0} title=${`나우다 인스타그램 게시물 ${i + 1}`} />
+        <${IgFrame} url=${p.url} eager title=${`나우다 인스타그램 게시물 ${i + 1}`} />
       </div>`)}
     </div>
     ${n > 1 && html`<div class="ig-ctrl">

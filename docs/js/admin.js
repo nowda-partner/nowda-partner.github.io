@@ -1,9 +1,9 @@
 // 관리자 화면
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611200029';
-import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611200029';
-import { InquiryView, Attachments } from './partner.js?v=202611200029';
-import { renderBlocks } from './render.js?v=202611200029';
-import { IgFrame, igEmbedUrl } from './instagram.js?v=202611200029';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611200042';
+import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611200042';
+import { InquiryView, Attachments } from './partner.js?v=202611200042';
+import { renderBlocks } from './render.js?v=202611200042';
+import { IgFrame, igEmbedUrl } from './instagram.js?v=202611200042';
 
 /* ───────── 로그인 ───────── */
 export function AdminLogin() {
@@ -151,7 +151,7 @@ function NoticeForm({ initial }) {
 
   useEffect(() => {
     let alive = true;
-    import('./editor.js?v=202611200029')
+    import('./editor.js?v=202611200042')
       .then((m) => m.createEditor(holder.current, initial.body))
       .then((ed) => { if (alive) { editor.current = ed; setEditorState('ready'); } else ed.destroy?.(); })
       .catch((e) => { console.error(e); alive && setEditorState('error'); });
@@ -568,7 +568,7 @@ export function AdminInstagram() {
     <div class="page-head"><h1>인스타그램 게시물</h1></div>
     <div class="ia-wrap">
       <div>
-        <p class="ia-hint">제휴사 홈 오른쪽에서 <b>한 개씩 6초마다</b> 넘어갑니다. 숨기지 않은 게시물이 위에서부터 <b>최대 ${IG_MAX}개</b> 보입니다.</p>
+        <p class="ia-hint">제휴사 홈 오른쪽에서 <b>한 개씩 3초마다</b> 넘어갑니다. 숨기지 않은 게시물이 위에서부터 <b>최대 ${IG_MAX}개</b> 보입니다.</p>
         <${Load} state=${st}>${() => list.length ? html`
           <ol class="ia-list">${list.map((g, i) => {
             const no = g.hidden ? 0 : ++order;

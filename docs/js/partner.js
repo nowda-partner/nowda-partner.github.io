@@ -1,10 +1,10 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200029';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200029';
-import { renderBlocks, plain } from './render.js?v=202611200029';
-import { ImpactBanner } from './stats.js?v=202611200029';
-import { GuideCard } from './guide.js?v=202611200029';
-import { InstagramCard } from './instagram.js?v=202611200029';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200042';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200042';
+import { renderBlocks, plain } from './render.js?v=202611200042';
+import { ImpactBanner } from './stats.js?v=202611200042';
+import { GuideCard } from './guide.js?v=202611200042';
+import { InstagramCard } from './instagram.js?v=202611200042';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -146,8 +146,6 @@ export function Home() {
       <${EventsCard} />
       </div>
       <div class="side-col">
-        <${AboutCard} />
-        <${InstagramCard} posts=${d.instagram} />
         <section class="card">
           <div class="card-head"><h2>내 문의</h2><a href="#/inquiries" class="more">전체 보기</a></div>
           <div class="stat-row">
@@ -157,12 +155,12 @@ export function Home() {
           ${d.inquiries.length > 0 && html`<ul class="mini-list">${d.inquiries.slice(0, 3).map((q) => html`
             <li><a href=${'#/inquiries/' + q.id}><${StatusBadge} status=${q.status} /><span class="t">${q.title}</span></a></li>`)}</ul>`}
           <a class="btn primary block" href="#/inquiries/new">문의 남기기</a>
+          <a class="faq-link" href="#/faq"><span class="q-icon">?</span><span><strong>자주 묻는 질문</strong><small>이용 방법·정산·QR 인증</small></span><span class="go">→</span></a>
         </section>
-        <section class="card quick">
-          <a href="#/faq"><span class="q-icon">?</span><span><strong>자주 묻는 질문</strong><small>이용 방법·정산·QR 인증</small></span></a>
-        </section>
+        <${InstagramCard} posts=${d.instagram} />
       </div>
-    </div>`}
+    </div>
+    <${AboutCard} />`}
   </${Load}>`;
 }
 
@@ -214,7 +212,7 @@ function boldText(s) {
 function AboutCard() {
   const about = CONFIG.ABOUT || [];
   if (!about.length) return null;
-  return html`<section class="card why">
+  return html`<section class="card why band">
     <h2>나우다가 함께합니다</h2>
     <ul>${about.map(([icon, text]) => html`<li><i>${icon}</i><span>${boldText(text)}</span></li>`)}</ul>
   </section>`;
