@@ -1,9 +1,9 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200014';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200014';
-import { renderBlocks, plain } from './render.js?v=202611200014';
-import { ImpactBanner } from './stats.js?v=202611200014';
-import { GuideCard } from './guide.js?v=202611200014';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200015';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200015';
+import { renderBlocks, plain } from './render.js?v=202611200015';
+import { ImpactBanner } from './stats.js?v=202611200015';
+import { GuideCard } from './guide.js?v=202611200015';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -223,7 +223,6 @@ function AboutCard() {
           <span>${s.name}${s.handle && html` <small>${s.handle}</small>`}</span>
           <span class="go">보러 가기 ↗</span>
         </a>`)}</div>
-      <p class="sns-hint">제휴사 소개와 이벤트 소식을 올리고 있습니다. 우리 업체가 소개된 게시물은 매장 SNS에도 공유해 보세요.</p>
     </div>`}
   </section>`;
 }

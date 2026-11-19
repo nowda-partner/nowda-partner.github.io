@@ -1,6 +1,6 @@
 // 체험 모드: 서버(앱스 스크립트) 없이 화면을 확인하기 위한 가짜 서버.
 // 데이터는 이 브라우저에만 저장됩니다. config.js에 API_URL을 넣으면 사용되지 않습니다.
-import { nowStr } from './lib.js?v=202611200014';
+import { nowStr } from './lib.js?v=202611200015';
 
 const DB_KEY = 'np_mock_db_v1';
 const STATUS = { open: '접수', doing: '처리중', done: '답변완료' };
