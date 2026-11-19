@@ -1,5 +1,5 @@
 // 공통 화면 조각
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl, api, peek } from './lib.js?v=202611200015';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl, api, peek } from './lib.js?v=202611200029';
 
 /**
  * 데이터를 불러오는 동안·실패했을 때 화면을 대신 그려 주는 도우미.

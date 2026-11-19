@@ -1,9 +1,10 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200015';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200015';
-import { renderBlocks, plain } from './render.js?v=202611200015';
-import { ImpactBanner } from './stats.js?v=202611200015';
-import { GuideCard } from './guide.js?v=202611200015';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200029';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200029';
+import { renderBlocks, plain } from './render.js?v=202611200029';
+import { ImpactBanner } from './stats.js?v=202611200029';
+import { GuideCard } from './guide.js?v=202611200029';
+import { InstagramCard } from './instagram.js?v=202611200029';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -146,6 +147,7 @@ export function Home() {
       </div>
       <div class="side-col">
         <${AboutCard} />
+        <${InstagramCard} posts=${d.instagram} />
         <section class="card">
           <div class="card-head"><h2>내 문의</h2><a href="#/inquiries" class="more">전체 보기</a></div>
           <div class="stat-row">
@@ -204,26 +206,17 @@ function EventsCard() {
   </section>`;
 }
 
-/* ───────── 홈: 나우다가 함께합니다 + SNS (문구는 config.js) ───────── */
+/* ───────── 홈: 나우다가 함께합니다 (문구는 config.js) ───────── */
 function boldText(s) {
   return String(s).split(/\*\*(.+?)\*\*/g).map((x, i) => (i % 2 ? html`<b>${x}</b>` : x));
 }
 
 function AboutCard() {
-  const about = CONFIG.ABOUT || [], sns = CONFIG.SNS || [];
-  if (!about.length && !sns.length) return null;
+  const about = CONFIG.ABOUT || [];
+  if (!about.length) return null;
   return html`<section class="card why">
     <h2>나우다가 함께합니다</h2>
-    ${about.length > 0 && html`<ul>${about.map(([icon, text]) => html`<li><i>${icon}</i><span>${boldText(text)}</span></li>`)}</ul>`}
-    ${sns.length > 0 && html`<div class="sns">
-      <div class="sns-h">나우다 SNS</div>
-      <div class="sns-row">${sns.map((s) => html`
-        <a href=${s.url} class="sns-btn" target="_blank" rel="noopener">
-          <i style=${{ background: s.color || 'var(--brand)' }}>${s.icon || s.name.slice(0, 1)}</i>
-          <span>${s.name}${s.handle && html` <small>${s.handle}</small>`}</span>
-          <span class="go">보러 가기 ↗</span>
-        </a>`)}</div>
-    </div>`}
+    <ul>${about.map(([icon, text]) => html`<li><i>${icon}</i><span>${boldText(text)}</span></li>`)}</ul>
   </section>`;
 }
 

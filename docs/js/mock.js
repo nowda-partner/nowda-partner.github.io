@@ -1,6 +1,6 @@
 // 체험 모드: 서버(앱스 스크립트) 없이 화면을 확인하기 위한 가짜 서버.
 // 데이터는 이 브라우저에만 저장됩니다. config.js에 API_URL을 넣으면 사용되지 않습니다.
-import { nowStr } from './lib.js?v=202611200015';
+import { nowStr } from './lib.js?v=202611200029';
 
 const DB_KEY = 'np_mock_db_v1';
 const STATUS = { open: '접수', doing: '처리중', done: '답변완료' };
@@ -19,6 +19,11 @@ function seed() {
       { id: 'M002', name: '오름 체험농장', type: '민영', category: '체험', active: true, code: '', issuedAt: '', lastLogin: '' },
     ],
     admins: [{ id: 'admin', name: '나우다 운영팀', password: 'admin12345' }],
+    instagram: [
+      { id: '1', url: 'https://www.instagram.com/p/Df6gV-jlFh-/', memo: '미션챌린지 기간 연장', order: 1, hidden: false, createdAt: t },
+      { id: '2', url: 'https://www.instagram.com/p/Df40_xhnb-l/', memo: '', order: 2, hidden: false, createdAt: t },
+      { id: '3', url: 'https://www.instagram.com/p/DaO5RSLP9i1/', memo: '', order: 3, hidden: false, createdAt: t },
+    ],
     notices: [
       {
         id: '1', title: '[긴급] 11월 20일 시스템 점검 안내', category: '시스템', urgent: true, pinned: false, hidden: false,
@@ -160,6 +165,8 @@ const popupLive = (n, t) => n.popup && (!n.popupStart || n.popupStart <= t) && (
 const dateOf = (n) => n.start || n.createdAt || '';
 const summary = (n) => { const { body, ...rest } = n; return { ...rest, summary: n.summary || summaryOf(body || {}), date: dateOf(n) }; };
 const byDateDesc = (a, b) => ((a.date || a.createdAt) < (b.date || b.createdAt) ? 1 : (a.date || a.createdAt) > (b.date || b.createdAt) ? -1 : Number(b.id) - Number(a.id));
+// 예전 체험 데이터에는 인스타그램 목록이 없을 수 있다
+const igList = (db) => (db.instagram ||= []).sort((a, b) => a.order - b.order || Number(a.id) - Number(b.id));
 const nextId = (list) => String(list.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0) + 1);
 const qSummary = (q) => ({ id: q.id, partnerId: q.partnerId, partnerName: q.partnerName, type: q.type, title: q.title, status: q.status, createdAt: q.createdAt, answeredAt: q.answeredAt, files: q.attachments.length });
 
@@ -216,6 +223,7 @@ const handlers = {
       urgent: vis.filter((n) => n.urgent).map(summary),
       recent: vis.slice(0, 6).map(summary),
       inquiries: mine.slice(0, 5),
+      instagram: igList(db).filter((g) => !g.hidden).slice(0, 5).map((g) => ({ id: g.id, url: g.url })),
       inquiryCounts: { open: mine.filter((q) => q.status !== STATUS.done).length, done: mine.filter((q) => q.status === STATUS.done).length },
     };
   },
@@ -330,6 +338,24 @@ const handlers = {
     db.faqs.push({ id, ...values });
     return { id };
   },
+  adminInstagram(db, p, t) { needAdmin(db, t); return igList(db); },
+  saveInstagram(db, p, t) {
+    needAdmin(db, t);
+    const list = igList(db);
+    const cur = list.find((g) => g.id === String(p.id || ''));
+    const hidden = p.hidden === undefined && cur ? cur.hidden : !!p.hidden;
+    if (!hidden && list.filter((g) => !g.hidden && g.id !== String(p.id || '')).length >= 5) throw fail('홈에 보이는 게시물은 5개까지입니다. 하나를 숨기거나 지운 뒤 다시 해 주세요.');
+    if (cur) { cur.hidden = hidden; if (p.memo !== undefined) cur.memo = p.memo; return { id: cur.id }; }
+    const m = String(p.url || '').match(/instagram\.com\/(?:[\w.]+\/)?(p|reel|tv)\/([\w-]+)/i);
+    if (!m) throw fail('인스타그램 게시물 주소가 아닙니다.');
+    const url = `https://www.instagram.com/${m[1].toLowerCase() === 'reel' ? 'reel' : 'p'}/${m[2]}/`;
+    if (list.some((g) => g.url === url)) throw fail('이미 등록한 게시물입니다.');
+    const id = nextId(db.instagram);
+    db.instagram.push({ id, url, memo: p.memo || '', order: list.reduce((x, g) => Math.max(x, g.order), 0) + 1, hidden, createdAt: nowStr() });
+    return { id };
+  },
+  deleteInstagram(db, p, t) { needAdmin(db, t); db.instagram = igList(db).filter((g) => g.id !== String(p.id)); return { id: p.id }; },
+  orderInstagram(db, p, t) { needAdmin(db, t); (p.ids || []).forEach((id, i) => { const g = igList(db).find((x) => x.id === String(id)); if (g) g.order = i + 1; }); return { ok: true }; },
   deleteFaq(db, p, t) { needAdmin(db, t); db.faqs = db.faqs.filter((x) => x.id !== String(p.id)); return { id: p.id }; },
   adminInquiries(db, p, t) { needAdmin(db, t); return db.inquiries.map(qSummary).sort(byDateDesc); },
   adminInquiry(db, p, t) {

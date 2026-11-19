@@ -1,5 +1,5 @@
 // 노션 스타일 블록 편집기(Editor.js). 관리자 화면에서만 불러온다.
-import { api, compressImage } from './lib.js?v=202611200015';
+import { api, compressImage } from './lib.js?v=202611200029';
 
 const CDN = 'https://cdn.jsdelivr.net/npm/';
 const load = (p) => import(CDN + p).then((m) => m.default);

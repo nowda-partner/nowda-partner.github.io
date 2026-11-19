@@ -1,8 +1,9 @@
 // 관리자 화면
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611200015';
-import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611200015';
-import { InquiryView, Attachments } from './partner.js?v=202611200015';
-import { renderBlocks } from './render.js?v=202611200015';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611200029';
+import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611200029';
+import { InquiryView, Attachments } from './partner.js?v=202611200029';
+import { renderBlocks } from './render.js?v=202611200029';
+import { IgFrame, igEmbedUrl } from './instagram.js?v=202611200029';
 
 /* ───────── 로그인 ───────── */
 export function AdminLogin() {
@@ -46,6 +47,7 @@ const NAV = [
   ['/admin/faq', 'FAQ 관리'],
   ['/admin/inquiries', '1:1 문의'],
   ['/admin/partners', '제휴사 관리'],
+  ['/admin/instagram', '인스타그램'],
 ];
 
 export function AdminShell({ path, children }) {
@@ -149,7 +151,7 @@ function NoticeForm({ initial }) {
 
   useEffect(() => {
     let alive = true;
-    import('./editor.js?v=202611200015')
+    import('./editor.js?v=202611200029')
       .then((m) => m.createEditor(holder.current, initial.body))
       .then((ed) => { if (alive) { editor.current = ed; setEditorState('ready'); } else ed.destroy?.(); })
       .catch((e) => { console.error(e); alive && setEditorState('error'); });
@@ -525,4 +527,82 @@ function PartnerModal({ item, onClose, onSaved }) {
       <div class="form-actions"><button type="button" class="btn" onClick=${onClose}>취소</button><button class="btn primary" disabled=${busy}>${busy ? '저장 중…' : '저장'}</button></div>
     </form>
   </${Modal}>`;
+}
+
+/* ───────── 인스타그램 게시물 ─────────
+ * 주소만 저장한다. 제휴사 홈 오른쪽에서 숨기지 않은 게시물이 순서대로 한 개씩 돌아간다(최대 5개).
+ */
+const IG_MAX = 5;
+
+export function AdminInstagram() {
+  const st = useApi('a', 'adminInstagram');
+  const [url, setUrl] = useState('');
+  const [memo, setMemo] = useState('');
+  const [busy, setBusy] = useState('');
+  const list = st.data || [];
+  const shown = list.filter((g) => !g.hidden).length;
+  const valid = !!igEmbedUrl(url);
+
+  const run = async (key, fn, done) => {
+    setBusy(key);
+    try { await fn(); if (done) toast(done); st.reload(); } catch (e) { toast(e.message, 'err'); } finally { setBusy(''); }
+  };
+  const add = (e) => {
+    e.preventDefault();
+    if (!valid) return toast('인스타그램 게시물 주소를 붙여 넣어 주세요.', 'err');
+    run('add', async () => { await api('a', 'saveInstagram', { url, memo, hidden: shown >= IG_MAX }); setUrl(''); setMemo(''); },
+      shown >= IG_MAX ? '추가했습니다. 홈에는 5개까지만 보여서 숨김으로 넣었습니다.' : '추가했습니다.');
+  };
+  const move = (i, d) => {
+    const ids = list.map((g) => g.id);
+    const j = i + d;
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    run('order', () => api('a', 'orderInstagram', { ids }));
+  };
+  const toggle = (g) => run('t' + g.id, () => api('a', 'saveInstagram', { id: g.id, hidden: !g.hidden }));
+  const remove = (g) => { if (confirm('이 게시물을 목록에서 지울까요?\n인스타그램 게시물 자체는 지워지지 않습니다.')) run('d' + g.id, () => api('a', 'deleteInstagram', { id: g.id }), '지웠습니다.'); };
+
+  let order = 0;
+  return html`
+    <div class="page-head"><h1>인스타그램 게시물</h1></div>
+    <div class="ia-wrap">
+      <div>
+        <p class="ia-hint">제휴사 홈 오른쪽에서 <b>한 개씩 6초마다</b> 넘어갑니다. 숨기지 않은 게시물이 위에서부터 <b>최대 ${IG_MAX}개</b> 보입니다.</p>
+        <${Load} state=${st}>${() => list.length ? html`
+          <ol class="ia-list">${list.map((g, i) => {
+            const no = g.hidden ? 0 : ++order;
+            return html`<li class=${cls('ia-item', g.hidden && 'off')}>
+              <div class="ia-ord">
+                <button onClick=${() => move(i, -1)} disabled=${i === 0 || !!busy} aria-label="위로">▲</button>
+                <button onClick=${() => move(i, 1)} disabled=${i === list.length - 1 || !!busy} aria-label="아래로">▼</button>
+              </div>
+              <span class="ia-no" title=${no ? `홈에서 ${no}번째` : '숨김'}>${no || '숨김'}</span>
+              <div class="ia-txt">
+                <b>${g.memo || '메모 없음'}</b>
+                <a class="u" href=${g.url} target="_blank" rel="noopener">${g.url.replace(/^https:\/\/www\./, '')}</a>
+                <small>${fmtDate(g.createdAt)} 등록</small>
+              </div>
+              <div class="acts">
+                <button class="btn sm" onClick=${() => toggle(g)} disabled=${!!busy}>${g.hidden ? '보이기' : '숨기기'}</button>
+                <button class="btn sm danger" onClick=${() => remove(g)} disabled=${!!busy}>삭제</button>
+              </div>
+            </li>`;
+          })}</ol>` : html`<${Empty}>아직 등록한 게시물이 없습니다. 오른쪽에서 주소를 붙여 넣어 추가해 주세요.</${Empty}>`}
+        </${Load}>
+      </div>
+
+      <form class="card ia-form" onSubmit=${add}>
+        <h2>게시물 추가</h2>
+        <div class="ia-count">홈에 보이는 게시물 <b>${shown}</b> / ${IG_MAX}</div>
+        <${Field} label="인스타그램 게시물 주소" hint="게시물 오른쪽 위 ⋯ → 링크 복사 → 붙여 넣기. 사진은 인스타그램에서 자동으로 불러옵니다.">
+          <input value=${url} onInput=${(e) => setUrl(e.target.value.trim())} placeholder="https://www.instagram.com/p/…" />
+        </${Field}>
+        <${Field} label="메모" hint="관리용입니다. 제휴사에게는 보이지 않습니다.">
+          <input value=${memo} maxlength="40" onInput=${(e) => setMemo(e.target.value)} placeholder="예: 11월 미션챌린지 기간 연장" />
+        </${Field}>
+        <div class="ia-pv">${valid ? html`<${IgFrame} url=${url} eager title="미리보기" />` : html`<div class="ia-empty">${url ? '인스타그램 게시물 주소가 아닙니다.' : '주소를 넣으면 미리보기가 나옵니다.'}</div>`}</div>
+        <button class="btn primary block" disabled=${!valid || !!busy}>${busy === 'add' ? '추가하는 중…' : '추가하기'}</button>
+      </form>
+    </div>`;
 }

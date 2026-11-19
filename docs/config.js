@@ -25,10 +25,8 @@ export const CONFIG = {
   // 나우다 이벤트 페이지. 홈 '진행 중인 나우다 이벤트' 목록은 서버가 이 페이지를 한 시간마다 읽어 옵니다.
   EVENT_PAGE: 'https://www.visitjeju.net/kr/nowda/event',
 
-  // 나우다 SNS (홈 오른쪽 '나우다가 함께합니다' 카드 아래). 채널이 늘면 줄을 추가하세요.
-  SNS: [
-    { name: '인스타그램', handle: '@_nowda_', url: 'https://www.instagram.com/_nowda_', icon: 'IG', color: 'linear-gradient(45deg,#f9a825,#e1306c,#833ab4)' },
-  ],
+  // 나우다 인스타그램 계정 (홈 오른쪽 인스타그램 카드 머리). 보여 줄 게시물은 관리자 화면 [인스타그램]에서 고릅니다.
+  INSTAGRAM: { handle: '@_nowda_', url: 'https://www.instagram.com/_nowda_' },
 
   // 홈 '나우다가 함께합니다' 문구. **굵게** 쓸 부분은 별표 두 개로 감쌉니다. 숫자는 직접 고쳐 주세요.
   ABOUT: [
