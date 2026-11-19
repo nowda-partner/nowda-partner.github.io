@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>나우다 안내문 (A4)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!--
+  A4 안내문 원본. 주소 뒤 ?doc= 로 고릅니다.
+    staff-g    : 직원용 · 공영관광지
+    staff-m    : 직원용 · 민영 제휴사
+    customer-g : 고객용 · 공영관광지 (한국어/영어)
+  화면에서 열어 인쇄(PDF로 저장)하면 A4 한 장으로 나옵니다.
+-->
+<style>
+  :root { --y:#fccc30; --y2:#f5b800; --ink:#1d2433; --ink2:#4a5468; --mut:#7b8496; --line:#e5e8ee; --blue:#2f6fed; --red:#e5383b; --green:#12a150; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:#e9ebef; }
+  body { font-family:'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', sans-serif; color:var(--ink); word-break:keep-all; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  h1, h2, h3, p { margin:0; }
+  img { display:block; }
+  @page { size:A4; margin:0; }
+  .sheet { width:210mm; height:297mm; margin:10mm auto; background:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 6px 30px rgba(16,24,40,.15); }
+  @media print { html, body { background:#fff; } .sheet { margin:0; box-shadow:none; } }
+
+  /* 공통: 머리 띠 */
+  .band { position:relative; background:var(--y); padding:12mm 14mm 10mm; overflow:hidden; }
+  .band .conf { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.55; }
+  .band .wm { height:8mm; width:auto; position:relative; }
+  .band .eyebrow { position:relative; margin-top:4mm; font-size:12pt; font-weight:700; }
+  .band h1 { position:relative; font-size:27pt; line-height:1.22; font-weight:900; letter-spacing:-.02em; margin-top:1.5mm; }
+  .band .chip { position:relative; display:inline-block; margin-top:3mm; background:var(--ink); color:#fff; font-size:12.5pt; font-weight:800; border-radius:99px; padding:1.5mm 5mm; }
+  .band .chip.g { background:var(--blue); }
+  .chars { position:absolute; right:10mm; bottom:-2mm; display:flex; align-items:flex-end; gap:1mm; }
+  .chars .halla { width:42mm; height:22.6mm; }
+  .chars .dong { width:26mm; height:21.6mm; margin-bottom:2mm; }
+  .chars .hyeon { width:24mm; height:22.4mm; }
+
+  .body { flex:1; display:flex; flex-direction:column; padding:7mm 14mm 0; min-height:0; }
+  .foot { display:flex; justify-content:space-between; align-items:center; padding:4mm 14mm 7mm; font-size:9.5pt; color:var(--mut); }
+  .foot img { height:5mm; opacity:.8; }
+
+  /* 직원용: 단계 */
+  .lead { font-size:13pt; color:var(--ink2); margin-bottom:4mm; }
+  .steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3mm; flex:1; }
+  .steps li { flex:1; display:grid; grid-template-columns:15mm 1fr auto; align-items:center; gap:5mm; border:1.5px solid var(--line); border-radius:5mm; padding:2.5mm 5mm; position:relative; }
+  .steps li.key { border-color:var(--blue); background:#f3f7ff; }
+  .steps .n { width:14mm; height:14mm; border-radius:50%; background:var(--y); display:grid; place-items:center; font-size:20pt; font-weight:900; }
+  .steps li.key .n { background:var(--blue); color:#fff; }
+  .steps h2 { font-size:19pt; line-height:1.3; display:flex; align-items:center; gap:2mm; }
+  .steps h2 small { font-size:10pt; font-weight:700; background:var(--blue); color:#fff; border-radius:2mm; padding:.6mm 2.2mm; }
+  .steps p { margin-top:1mm; font-size:12pt; color:var(--ink2); line-height:1.5; }
+  .steps .ph { height:30mm; width:auto; }
+  .lv { display:grid; grid-template-columns:1fr 1fr; gap:3mm; margin-top:2.5mm; }
+  .lv div { border-radius:3mm; padding:2.2mm 4mm; font-size:11pt; line-height:1.4; }
+  .lv .ok { background:#e7f6ee; color:#17663a; }
+  .lv .no { background:#fdecec; color:#a8201a; }
+  .lv b { display:block; font-size:14pt; }
+  .warn { margin-top:4mm; border:2px solid var(--red); border-radius:4mm; padding:4mm 5mm; font-size:14pt; font-weight:800; color:#a8201a; display:flex; gap:3mm; align-items:center; }
+  .warn i { font-style:normal; font-size:18pt; }
+
+  /* 고객용 */
+  .c-hero { position:relative; height:70mm; background:url('../img/guide/mem_sea_bg.jpg') center 60% / cover; }
+  .c-hero::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.0) 60%, #fff 100%); }
+  .c-top { position:absolute; left:14mm; top:11mm; right:14mm; z-index:1; display:flex; justify-content:space-between; align-items:center; }
+  .c-top .wm { height:8mm; }
+  .c-top span { background:rgba(255,255,255,.9); border-radius:99px; padding:1.2mm 4mm; font-size:10pt; font-weight:700; }
+  .c-head { position:absolute; left:14mm; top:22mm; z-index:1; }
+  .c-head h1 { font-size:27pt; line-height:1.2; font-weight:900; letter-spacing:-.02em; color:var(--ink); text-shadow:0 1px 0 rgba(255,255,255,.6); }
+  .c-head h1 em { font-style:normal; background:var(--y); padding:0 2mm; border-radius:2mm; }
+  .c-head .en { margin-top:2.5mm; font-size:11pt; font-weight:700; color:var(--ink2); }
+  .c-chars { position:absolute; right:8mm; bottom:-1mm; z-index:2; display:flex; align-items:flex-end; gap:1mm; }
+  .c-chars .halla { width:34mm; height:18.3mm; }
+  .c-chars .dong { width:21mm; height:17.4mm; margin-bottom:1.5mm; }
+  .c-chars .hyeon { width:19mm; height:17.8mm; }
+  .c-body { flex:1; padding:2mm 14mm 0; display:flex; flex-direction:column; gap:3.5mm; min-height:0; }
+  .c-cond { display:flex; align-items:center; gap:5mm; background:#f3f7ff; border:2px solid var(--blue); border-radius:5mm; padding:3mm 5mm; }
+  .c-cond .lvb { flex:none; background:var(--blue); color:#fff; border-radius:4mm; padding:2.5mm 4mm; text-align:center; font-weight:900; font-size:18pt; line-height:1.1; }
+  .c-cond .lvb small { display:block; font-size:9pt; font-weight:700; opacity:.85; }
+  .c-cond b { font-size:15pt; }
+  .c-cond p { font-size:11.5pt; color:var(--ink2); margin-top:1mm; line-height:1.45; }
+  .c-cond .en, .en { color:var(--mut); font-size:10pt; }
+  .c-grid { display:grid; grid-template-columns:60mm 1fr; gap:4mm; flex:1; min-height:0; }
+  .c-join { border:1.5px solid var(--line); border-radius:5mm; padding:4mm; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2.5mm; background:#fffbea; border-color:#f3de9c; }
+  .c-join h2 { font-size:15pt; }
+  .c-join h2 .en { display:block; font-size:10pt; font-weight:700; }
+  .c-join .qr { width:34mm; height:34mm; background:#fff; border-radius:3mm; padding:1.5mm; }
+  .c-join .url { font-size:9.5pt; font-weight:700; color:var(--ink2); }
+  .c-join ul { list-style:none; margin:0; padding:0; width:100%; display:flex; flex-direction:column; gap:2mm; text-align:left; }
+  .c-join li { background:#fff; border-radius:3mm; padding:2.2mm 3mm; font-size:10.5pt; line-height:1.4; }
+  .c-join li b { display:block; font-size:11.5pt; }
+  .c-join .naver { display:inline-block; background:#03c75a; color:#fff; font-weight:800; border-radius:1.5mm; padding:0 1.5mm; font-size:9.5pt; }
+  .c-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3mm; }
+  .c-steps li { display:grid; grid-template-columns:10mm 1fr auto; gap:3.5mm; align-items:center; border:1.5px solid var(--line); border-radius:4mm; padding:2mm 4mm; flex:1; }
+  .c-steps .n { width:10mm; height:10mm; border-radius:50%; background:var(--y); display:grid; place-items:center; font-weight:900; font-size:14pt; }
+  .c-steps h3 { font-size:13.5pt; line-height:1.3; }
+  .c-steps p { font-size:10.5pt; color:var(--ink2); line-height:1.45; margin-top:.5mm; }
+  .c-steps .en { display:block; margin-top:.5mm; font-size:9.5pt; line-height:1.35; }
+  .c-steps .ph { height:19mm; }
+  .c-pts { border-radius:4mm; background:#f6f7f9; padding:3mm 5mm; font-size:10.5pt; line-height:1.5; }
+  .c-pts b { font-size:11.5pt; }
+  .c-pts .row { display:flex; flex-wrap:wrap; gap:1.5mm 5mm; margin-top:1mm; color:var(--ink2); }
+  .c-pts .row span b { color:var(--ink); font-size:10.5pt; }
+  .c-warn { border-left:4px solid var(--red); background:#fdecec; border-radius:0 3mm 3mm 0; padding:2.5mm 4mm; font-size:10.5pt; color:#8f1d17; line-height:1.45; }
+  .c-warn b { font-weight:800; }
+  .c-warn .en { color:#b2554f; display:block; font-size:9.5pt; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const IMG = '../img/guide/';
+const WM = `<img class="wm" src="${IMG}nowda_logo_wordmark.svg" alt="nowda">`;
+const CHARS = (c) => `<div class="${c}"><img class="halla" src="${IMG}intro_halla_body.svg" alt=""><img class="dong" src="${IMG}intro_face_dongbaek.svg" alt=""><img class="hyeon" src="${IMG}intro_face_hyeonmu.svg" alt=""></div>`;
+const FOOT = `<div class="foot"><span>문의: 나우다 제휴사 안내 partner.nowda.kr → 1:1 문의</span><span>제주특별자치도 · 제주관광공사</span></div>`;
+
+function staff(g) {
+  const lv = `<div class="lv"><div class="ok"><b>LV2 → 이용 가능</b>누적 포인트 2,000점 이상</div><div class="no"><b>LV1 → 이용 불가</b>혜택·QR 인증 대상 아님</div></div>`;
+  const steps = g ? [
+    ['회원가입', '나우다 회원인지 확인합니다. 회원이 아니면 가입을 안내해 주세요.'],
+    ['등급 확인', '로그인한 뒤 관광증(마이페이지)에서 등급을 보여 달라고 해 주세요.' + lv, 'step2_phone.png', '공영만'],
+    ['관광증 제시', 'LV2 회원의 나우다 관광증 화면을 확인합니다.'],
+    ['혜택 적용', '우리 관광지의 나우다 혜택(입장료 감면)을 적용해 드립니다.'],
+    ['QR 인증', '혜택을 받은 LV2 회원만 매표소 QR코드로 방문 인증합니다. (1회 200포인트)', 'step1_phone.png'],
+  ] : [
+    ['회원가입', '나우다 회원인지 확인합니다. 회원이 아니면 가입을 안내해 주세요.'],
+    ['관광증 제시', '손님의 나우다 관광증 화면을 확인합니다.', 'step2_phone.png'],
+    ['혜택 적용', '우리 업체에 등록된 나우다 혜택을 적용해 드립니다.'],
+    ['QR 인증', '혜택을 받은 손님만 매장 QR코드로 방문 인증합니다.', 'step1_phone.png'],
+  ];
+  return `<div class="sheet">
+    <div class="band">
+      <img class="conf" src="${IMG}intro_confetti_l.svg" alt="">
+      ${WM}
+      <div class="eyebrow">제휴사 직원용</div>
+      <h1>나우다 회원이 오면<br>이렇게 안내해 주세요</h1>
+      <span class="chip ${g ? 'g' : ''}">${g ? '공영관광지 · LV2 회원 전용' : '민영 제휴사 · 나우다 회원 누구나'}</span>
+      ${CHARS('chars')}
+    </div>
+    <div class="body">
+      <ol class="steps">${steps.map(([t, d, img, tag], i) => `
+        <li class="${tag ? 'key' : ''}"><span class="n">${i + 1}</span>
+          <div><h2>${t}${tag ? `<small>${tag}</small>` : ''}</h2><p>${d}</p></div>
+          ${img ? `<img class="ph" src="${IMG}${img}" alt="">` : '<span></span>'}</li>`).join('')}
+      </ol>
+      <div class="warn"><i>⚠️</i><span>${g ? 'LV1 회원이거나 혜택이 적용되지 않았다면 QR 인증을 하지 않습니다.' : '혜택이 적용되지 않았다면 QR 인증을 하지 않습니다.'}</span></div>
+    </div>
+    ${FOOT}
+  </div>`;
+}
+
+function customerG() {
+  return `<div class="sheet">
+    <div class="c-hero">
+      <div class="c-top">${WM}<span>제주 공식 여행 멤버십 · Jeju Official Travel Membership</span></div>
+      <div class="c-head">
+        <h1>나우다 <em>Level 2</em> 회원이면<br>입장료가 무료 또는 50%!</h1>
+        <p class="en">NOWDA Level 2 members get free or 50% off admission.</p>
+      </div>
+      ${CHARS('c-chars')}
+    </div>
+    <div class="c-body">
+      <div class="c-cond">
+        <div class="lvb"><small>LEVEL</small>2</div>
+        <div>
+          <b>누적 포인트 2,000점 이상 회원만 이용할 수 있어요</b>
+          <p>내 등급은 나우다 로그인 후 <b>관광증</b>에서 확인할 수 있습니다.<br>
+          <span class="en">Only for members with 2,000+ points. Sign in and check your level on your Tourist ID.</span></p>
+        </div>
+      </div>
+
+      <div class="c-grid">
+        <div class="c-join">
+          <h2>나우다 회원가입<span class="en">Join NOWDA</span></h2>
+          <img class="qr" src="${IMG}qr_nowda_join.svg" alt="visitjeju.net/nowda QR">
+          <div class="url">visitjeju.net/nowda</div>
+          <ul>
+            <li><b>내국인</b><span class="naver">N</span> 네이버 로그인으로 간편 가입</li>
+            <li><b>Foreigners</b>Sign up with your email address</li>
+          </ul>
+          <p class="en">제주도민 제외, 만 14세 이상<br>Ages 14+, excluding Jeju residents</p>
+        </div>
+
+        <ol class="c-steps">
+          <li><span class="n">1</span><div><h3>로그인하고 등급 확인</h3><p>관광증에 LEVEL 2가 표시되는지 확인해 주세요.</p><span class="en">Sign in and make sure your Tourist ID shows LEVEL 2.</span></div><img class="ph" src="${IMG}step2_phone.png" alt=""></li>
+          <li><span class="n">2</span><div><h3>매표소에 관광증 제시</h3><p>표를 사기 전에 관광증 화면을 보여 주세요.</p><span class="en">Show your Tourist ID at the ticket booth before buying a ticket.</span></div><span></span></li>
+          <li><span class="n">3</span><div><h3>입장료 감면 혜택 적용</h3><p>관광지에 따라 무료 또는 50% 할인됩니다.</p><span class="en">Free or 50% off, depending on the site.</span></div><span></span></li>
+          <li><span class="n">4</span><div><h3>QR코드로 방문 인증</h3><p>혜택을 받은 뒤 매표소 QR을 찍으면 200포인트!</p><span class="en">After the benefit, scan the QR code to earn 200 points.</span></div><img class="ph" src="${IMG}step1_phone.png" alt=""></li>
+        </ol>
+      </div>
+
+      <div class="c-pts">
+        <b>아직 Level 1이라면? · Still Level 1?</b>
+        <div class="row">
+          <span>나우다 제휴사 방문 인증 <b>1회 200P</b></span>
+          <span>고향사랑기부제 참여 <b>2,000P</b></span>
+          <span>탐나는전 사용(1만 원 이상) <b>건별 100P</b></span>
+        </div>
+        <span class="en">Earn 200P per partner visit. You reach Level 2 automatically at 2,000P.</span>
+      </div>
+
+      <div class="c-warn"><b>입장 전에 꼭 관광증을 보여 주세요.</b> 발권·입장 후에는 혜택을 소급하거나 환불할 수 없습니다.
+        <span class="en">Benefits cannot be applied or refunded after ticketing or entry.</span></div>
+    </div>
+    <div class="foot"><span>제주관광정보센터 064-740-6000</span>${WM.replace('class="wm"', 'style="height:5mm;opacity:.8"')}</div>
+  </div>`;
+}
+
+const doc = new URLSearchParams(location.search).get('doc') || 'staff-g';
+document.getElementById('root').innerHTML =
+  doc === 'customer-g' ? customerG() : staff(doc !== 'staff-m');
+document.title = { 'staff-g': '나우다 회원 응대 안내_공영관광지_직원용', 'staff-m': '나우다 회원 응대 안내_민영 제휴사_직원용', 'customer-g': '나우다 공영관광지 이용 안내_고객용' }[doc] || document.title;
+</script>
+</body>
+</html>

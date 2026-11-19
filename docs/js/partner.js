@@ -3,6 +3,7 @@ import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSessio
 import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js';
 import { renderBlocks, plain } from './render.js';
 import { ImpactBanner } from './stats.js';
+import { GuideCard } from './guide.js';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -52,6 +53,7 @@ export function PartnerLogin() {
 /* ───────── 공통 틀 ───────── */
 const NAV = [
   ['/', '홈'],
+  ['/guide', '회원 응대'],
   ['/notices', '소식'],
   ['/stats', '내 실적'],
   ['/faq', 'FAQ'],
@@ -131,6 +133,7 @@ export function Home() {
         ${d.urgent.map((n) => html`<a href=${'#/notices/' + n.id}><strong>긴급</strong><span>${n.title}</span><span class="arrow">→</span></a>`)}
       </div>`}
     <${ImpactBanner} name=${d.me.name} />
+    <${GuideCard} />
     <div class="home-grid">
       <div class="main-col">
       <section class="card">

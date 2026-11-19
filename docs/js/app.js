@@ -3,12 +3,14 @@ import { html, render, useState, useEffect, currentPath, match, getSession, go, 
 import { Toaster } from './ui.js';
 import * as P from './partner.js';
 import { Stats } from './stats.js';
+import { Guide } from './guide.js';
 
 // 관리자 화면 코드는 관리자 주소로 들어왔을 때만 내려받는다.
 let A = null;
 
 const PARTNER_ROUTES = [
   ['/', () => html`<${P.Home} />`],
+  ['/guide', () => html`<${Guide} />`],
   ['/notices', () => html`<${P.Notices} />`],
   ['/notices/:id', (p) => html`<${P.NoticeDetail} id=${p.id} />`],
   ['/stats', () => html`<${Stats} />`],
