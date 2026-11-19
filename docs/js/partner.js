@@ -1,9 +1,9 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611192351';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611192351';
-import { renderBlocks, plain } from './render.js?v=202611192351';
-import { ImpactBanner } from './stats.js?v=202611192351';
-import { GuideCard } from './guide.js?v=202611192351';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611192358';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611192358';
+import { renderBlocks, plain } from './render.js?v=202611192358';
+import { ImpactBanner } from './stats.js?v=202611192358';
+import { GuideCard } from './guide.js?v=202611192358';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {

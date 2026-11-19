@@ -1,7 +1,8 @@
 // 나우다 회원 응대 안내 (홈 카드 + 상세 화면)
-// 로그인한 업체가 공영관광지인지 민영 제휴사인지에 따라 그 업체에 맞는 안내만 보여 준다.
+// 로그인한 업체가 공영관광지인지 아닌지에 따라 그 업체에 맞는 안내만 보여 준다.
+// 공영관광지가 아닌 업체에는 '민영'이라는 말을 쓰지 않는다.
 // A4 안내문 PDF는 docs/print/pdf/ 에 있다. 원본은 docs/print/guide.html (README 참고).
-import { html, getSession } from './lib.js?v=202611192351';
+import { html, getSession } from './lib.js?v=202611192358';
 
 const IMG = './img/guide/';
 
@@ -36,7 +37,7 @@ const GUIDE = {
     ],
   },
   m: {
-    label: '민영 제휴사',
+    label: '',
     sub: '나우다 회원 누구나',
     lead: '나우다 회원이 방문하면 아래 순서로 안내해 주세요.',
     steps: [
@@ -46,7 +47,10 @@ const GUIDE = {
       ['QR 인증', '혜택을 받은 손님만 매장 QR코드로 방문 인증을 합니다.', '손님', false, 'step1_phone.png', '혜택이 적용되지 않았다면 QR 인증을 하지 않도록 안내해 주세요.'],
     ],
     qa: [],
-    files: [['staff-m', '직원용 안내문', '계산대·카운터에 붙여 두는 응대 순서표', '나우다 회원 응대 안내_민영 제휴사_직원용.pdf']],
+    files: [
+      ['staff-m', '직원용 안내문', '계산대·카운터 안쪽에 붙여 두는 응대 순서표', '나우다 회원 응대 안내_직원용.pdf'],
+      ['customer-m', '고객용 안내문 (한국어·영어)', '계산대 앞에 붙여 두는 혜택 이용 방법·회원가입 QR 안내', '나우다 회원 혜택 안내_고객용.pdf'],
+    ],
   },
 };
 
@@ -57,7 +61,7 @@ export function GuideCard() {
   const t = current(), d = GUIDE[t];
   return html`<section class="card gs">
     <div class="card-head">
-      <h2>나우다 회원이 오면 이렇게 안내해 주세요 <span class=${'gs-type ' + t}>${d.label}</span></h2>
+      <h2>나우다 회원이 오면 이렇게 안내해 주세요 ${d.label && html`<span class=${'gs-type ' + t}>${d.label}</span>`}</h2>
       <a href="#/guide" class="more">자세히 보기 · 안내문 PDF →</a>
     </div>
     <ol class=${'gs-steps n' + d.steps.length}>${d.steps.map(([s, , , key]) => html`<li class=${key ? 'key' : ''}><span>${s}</span></li>`)}</ol>
@@ -74,7 +78,7 @@ export function Guide() {
       <img class="wm" src=${IMG + 'nowda_logo_wordmark.svg'} alt="nowda" />
       <h1>나우다 회원 응대 안내</h1>
       <p>${d.lead}</p>
-      <span class=${'chip ' + t}>${d.label} · ${d.sub}</span>
+      <span class=${'chip ' + t}>${d.label ? d.label + ' · ' + d.sub : d.sub}</span>
       <div class="g-chars" aria-hidden="true">
         <img class="halla" src=${IMG + 'intro_halla_body.svg'} alt="" />
         <img class="dong" src=${IMG + 'intro_face_dongbaek.svg'} alt="" />

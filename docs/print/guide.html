@@ -9,8 +9,9 @@
 <!--
   A4 안내문 원본. 주소 뒤 ?doc= 로 고릅니다.
     staff-g    : 직원용 · 공영관광지
-    staff-m    : 직원용 · 민영 제휴사
+    staff-m    : 직원용 · 일반 제휴사(공영관광지 외)
     customer-g : 고객용 · 공영관광지 (한국어/영어)
+    customer-m : 고객용 · 일반 제휴사 (한국어/영어)
   화면에서 열어 인쇄(PDF로 저장)하면 A4 한 장으로 나옵니다.
 -->
 <style>
@@ -78,6 +79,8 @@
   .c-cond { display:flex; align-items:center; gap:5mm; background:#f3f7ff; border:2px solid var(--blue); border-radius:5mm; padding:3mm 5mm; }
   .c-cond .lvb { flex:none; background:var(--blue); color:#fff; border-radius:4mm; padding:2.5mm 4mm; text-align:center; font-weight:900; font-size:18pt; line-height:1.1; }
   .c-cond .lvb small { display:block; font-size:9pt; font-weight:700; opacity:.85; }
+  .c-cond.all { background:#fffbea; border-color:var(--y2); }
+  .c-cond.all .lvb { background:var(--y); color:var(--ink); font-size:16pt; }
   .c-cond b { font-size:15pt; }
   .c-cond p { font-size:11.5pt; color:var(--ink2); margin-top:1mm; line-height:1.45; }
   .c-cond .en, .en { color:var(--mut); font-size:10pt; }
@@ -135,7 +138,7 @@ function staff(g) {
       ${WM}
       <div class="eyebrow">제휴사 직원용</div>
       <h1>나우다 회원이 오면<br>이렇게 안내해 주세요</h1>
-      <span class="chip ${g ? 'g' : ''}">${g ? '공영관광지 · LV2 회원 전용' : '민영 제휴사 · 나우다 회원 누구나'}</span>
+      <span class="chip ${g ? 'g' : ''}">${g ? '공영관광지 · LV2 회원 전용' : '나우다 회원 누구나'}</span>
       ${CHARS('chars')}
     </div>
     <div class="body">
@@ -207,10 +210,66 @@ function customerG() {
   </div>`;
 }
 
+function customerM() {
+  return `<div class="sheet">
+    <div class="c-hero">
+      <div class="c-top">${WM}<span>제주 공식 여행 멤버십 · Jeju Official Travel Membership</span></div>
+      <div class="c-head">
+        <h1>나우다 회원이면<br>이곳에서 <em>특별 혜택!</em></h1>
+        <p class="en">NOWDA members get special benefits here.</p>
+      </div>
+      ${CHARS('c-chars')}
+    </div>
+    <div class="c-body">
+      <div class="c-cond all">
+        <div class="lvb"><small>NOWDA</small>ALL</div>
+        <div>
+          <b>나우다 회원이면 누구나 받을 수 있어요</b>
+          <p>회원가입하고 <b>관광증</b>을 보여 주시면 혜택을 드립니다.<br>
+          <span class="en">Any NOWDA member can get the benefit. Just sign up and show your Tourist ID.</span></p>
+        </div>
+      </div>
+
+      <div class="c-grid">
+        <div class="c-join">
+          <h2>나우다 회원가입<span class="en">Join NOWDA</span></h2>
+          <img class="qr" src="${IMG}qr_nowda_join.svg" alt="visitjeju.net/nowda QR">
+          <div class="url">visitjeju.net/nowda</div>
+          <ul>
+            <li><b>내국인</b><span class="naver">N</span> 네이버 로그인으로 간편 가입</li>
+            <li><b>Foreigners</b>Sign up with your email address</li>
+          </ul>
+          <p class="en">제주도민 제외, 만 14세 이상<br>Ages 14+, excluding Jeju residents</p>
+        </div>
+
+        <ol class="c-steps">
+          <li><span class="n">1</span><div><h3>회원가입·로그인</h3><p>왼쪽 QR코드로 나우다에 가입하거나 로그인해 주세요.</p><span class="en">Scan the QR code on the left to sign up or sign in.</span></div><span></span></li>
+          <li><span class="n">2</span><div><h3>결제 전에 관광증 제시</h3><p>주문·결제하기 전에 관광증 화면을 보여 주세요.</p><span class="en">Show your Tourist ID before you order or pay.</span></div><img class="ph" src="${IMG}step2_phone.png" alt=""></li>
+          <li><span class="n">3</span><div><h3>나우다 혜택 적용</h3><p>이곳의 나우다 회원 혜택을 받으세요.</p><span class="en">Enjoy the NOWDA member benefit here.</span></div><span></span></li>
+          <li><span class="n">4</span><div><h3>QR코드로 방문 인증</h3><p>혜택을 받은 뒤 매장 QR을 찍으면 200포인트!</p><span class="en">After the benefit, scan the store QR code to earn 200 points.</span></div><img class="ph" src="${IMG}step1_phone.png" alt=""></li>
+        </ol>
+      </div>
+
+      <div class="c-pts">
+        <b>포인트 모아 Level 2가 되면? · Reach Level 2</b>
+        <div class="row">
+          <span>누적 <b>2,000P</b>면 자동으로 Level 2</span>
+          <span>공영관광지 27곳 입장료 <b>무료 또는 50%</b></span>
+        </div>
+        <span class="en">At 2,000P you become Level 2 and get free or 50% off admission at 27 public attractions.</span>
+      </div>
+
+      <div class="c-warn"><b>결제 전에 꼭 관광증을 보여 주세요.</b> 결제·이용 후에는 혜택을 소급하거나 환불할 수 없습니다.
+        <span class="en">Benefits cannot be applied or refunded after payment or use.</span></div>
+    </div>
+    <div class="foot"><span>제주관광정보센터 064-740-6000</span>${WM.replace('class="wm"', 'style="height:5mm;opacity:.8"')}</div>
+  </div>`;
+}
+
 const doc = new URLSearchParams(location.search).get('doc') || 'staff-g';
 document.getElementById('root').innerHTML =
-  doc === 'customer-g' ? customerG() : staff(doc !== 'staff-m');
-document.title = { 'staff-g': '나우다 회원 응대 안내_공영관광지_직원용', 'staff-m': '나우다 회원 응대 안내_민영 제휴사_직원용', 'customer-g': '나우다 공영관광지 이용 안내_고객용' }[doc] || document.title;
+  doc === 'customer-g' ? customerG() : doc === 'customer-m' ? customerM() : staff(doc !== 'staff-m');
+document.title = { 'staff-g': '나우다 회원 응대 안내_공영관광지_직원용', 'staff-m': '나우다 회원 응대 안내_직원용', 'customer-g': '나우다 공영관광지 이용 안내_고객용', 'customer-m': '나우다 회원 혜택 안내_고객용' }[doc] || document.title;
 </script>
 </body>
 </html>
