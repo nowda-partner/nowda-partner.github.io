@@ -2,7 +2,7 @@
 import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js';
 import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js';
 import { renderBlocks, plain } from './render.js';
-import { StatsCard } from './stats.js';
+import { ImpactBanner } from './stats.js';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -130,19 +130,19 @@ export function Home() {
       <div class="urgent-bar">
         ${d.urgent.map((n) => html`<a href=${'#/notices/' + n.id}><strong>긴급</strong><span>${n.title}</span><span class="arrow">→</span></a>`)}
       </div>`}
-    <section class="hello">
-      <h1>${d.me.name}님, 안녕하세요.</h1>
-      <p class="muted">나우다 소식과 자주 묻는 질문을 확인하고, 필요한 내용은 1:1 문의로 남겨 주세요.</p>
-    </section>
+    <${ImpactBanner} name=${d.me.name} />
     <div class="home-grid">
+      <div class="main-col">
       <section class="card">
         <div class="card-head"><h2>최근 소식</h2><a href="#/notices" class="more">전체 보기</a></div>
         ${d.recent.length
           ? html`<ul class="notice-list compact">${d.recent.map((n) => html`<${NoticeRow} n=${n} />`)}</ul>`
           : html`<${Empty}>아직 등록된 소식이 없습니다.</${Empty}>`}
       </section>
+      <${EventsCard} />
+      </div>
       <div class="side-col">
-        <${StatsCard} />
+        <${AboutCard} />
         <section class="card">
           <div class="card-head"><h2>내 문의</h2><a href="#/inquiries" class="more">전체 보기</a></div>
           <div class="stat-row">
@@ -159,6 +159,70 @@ export function Home() {
       </div>
     </div>`}
   </${Load}>`;
+}
+
+/* ───────── 홈: 나우다 이벤트 ─────────
+ * 서버가 비짓제주 나우다 이벤트 페이지를 읽어 진행 중·예정 이벤트를 보내 준다.
+ * 못 읽었거나 진행 중인 이벤트가 없으면 이벤트 페이지 링크만 보여 준다.
+ */
+const EV_SHOW = 4;
+const evDate = (s) => s.replace(/-/g, '.');
+
+function EventsCard() {
+  const st = useApi('p', 'events', {}, { cache: 600000 });
+  const list = st.data?.list || [];
+  const page = st.data?.page || CONFIG.EVENT_PAGE;
+  if (!page) return null;
+  const more = list.length - EV_SHOW;
+  return html`<section class="card">
+    <div class="card-head">
+      <h2>진행 중인 나우다 이벤트</h2>
+      <a href=${page} class="more" target="_blank" rel="noopener">이벤트 페이지 ↗</a>
+    </div>
+    ${st.loading && !st.data
+      ? html`<${Loading} />`
+      : list.length
+        ? html`<div class="ev-list">${list.slice(0, EV_SHOW).map((e) => html`
+            <a class="ev" href=${e.url} target="_blank" rel="noopener">
+              <div class="ev-thumb">${e.img ? html`<img src=${e.img} alt="" loading="lazy" referrerpolicy="no-referrer" />` : '🎁'}</div>
+              <div class="ev-body">
+                <div class="ev-tags">
+                  ${e.state === 'on' ? html`<span class="ev-state on">진행 중</span>` : html`<span class="ev-state">예정</span>`}
+                  ${e.soon && html`<span class="ev-state soon">마감 임박</span>`}
+                </div>
+                <strong>${e.title}</strong>
+                <small>${evDate(e.start)} ~ ${evDate(e.end)}</small>
+              </div>
+              <span class="ev-go" aria-hidden="true">↗</span>
+            </a>`)}</div>
+          ${more > 0 && html`<a class="ev-more" href=${page} target="_blank" rel="noopener">이벤트 ${more}개 더 보기 ↗</a>`}`
+        : html`<a class="ev-more" href=${page} target="_blank" rel="noopener">나우다 이벤트 페이지 보기 ↗</a>`}
+    <p class="ev-hint">우리 업체 손님에게도 알려 주세요. 매장 안내문·SNS에 이벤트 링크를 함께 걸면 좋습니다.</p>
+  </section>`;
+}
+
+/* ───────── 홈: 나우다가 함께합니다 + SNS (문구는 config.js) ───────── */
+function boldText(s) {
+  return String(s).split(/\*\*(.+?)\*\*/g).map((x, i) => (i % 2 ? html`<b>${x}</b>` : x));
+}
+
+function AboutCard() {
+  const about = CONFIG.ABOUT || [], sns = CONFIG.SNS || [];
+  if (!about.length && !sns.length) return null;
+  return html`<section class="card why">
+    <h2>나우다가 함께합니다</h2>
+    ${about.length > 0 && html`<ul>${about.map(([icon, text]) => html`<li><i>${icon}</i><span>${boldText(text)}</span></li>`)}</ul>`}
+    ${sns.length > 0 && html`<div class="sns">
+      <div class="sns-h">나우다 SNS</div>
+      <div class="sns-row">${sns.map((s) => html`
+        <a href=${s.url} class="sns-btn" target="_blank" rel="noopener">
+          <i style=${{ background: s.color || 'var(--brand)' }}>${s.icon || s.name.slice(0, 1)}</i>
+          <span>${s.name}${s.handle && html` <small>${s.handle}</small>`}</span>
+          <span class="go">팔로우 ↗</span>
+        </a>`)}</div>
+      <p class="sns-hint">팔로우하면 제휴처 홍보와 이벤트 소식을 먼저 받아 볼 수 있습니다.</p>
+    </div>`}
+  </section>`;
 }
 
 function NoticeRow({ n }) {

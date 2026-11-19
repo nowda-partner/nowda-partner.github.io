@@ -122,7 +122,10 @@ function mockStats(me) {
     if (i === 14) u = Math.round(u * 0.1);
     const p = Math.max(0, Math.round(u * (0.88 + rnd() * 0.08)));
     const r = { u, p };
-    if (prev && prev.u) r.mo = Math.round((u - prev.u) / prev.u * 100);
+    if (part) { // 진행 중인 달: 지난달 같은 기간과 비교
+      r.pu = prev ? Math.round(prev.u * Number(today.slice(8)) / 30) : 0;
+      if (r.pu) r.mo = Math.round((u - r.pu) / r.pu * 100);
+    } else if (prev && prev.u) r.mo = Math.round((u - prev.u) / prev.u * 100);
     const n = plan.base > 100 ? 18 + Math.round(rnd() * 8) : (i > 10 ? 6 : 30);
     if (n >= 10) {
       const um = Math.round(u * (0.4 + rnd() * 0.9)), pm = Math.round(um * 0.9);
@@ -226,6 +229,18 @@ const handlers = {
   },
   faqs(db, p, t) { needPartner(db, t); return db.faqs.filter((f) => !f.hidden).sort((a, b) => a.order - b.order); },
   myStats(db, p, t) { return mockStats(needPartner(db, t)); },
+  events(db, p, t) {
+    needPartner(db, t);
+    const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+    const page = 'https://www.visitjeju.net/kr/nowda/event';
+    return { page, list: [
+      { title: '체험 이벤트 — 마감이 가까운 이벤트', start: day(-12), end: day(5), url: page, img: '', state: 'on', soon: true },
+      { title: '체험 이벤트 — 진행 중인 미션 챌린지', start: day(-3), end: day(25), url: page, img: '', state: 'on', soon: false },
+      { title: '체험 이벤트 — 오래 하는 혜택', start: day(-30), end: day(400), url: page, img: '', state: 'on', soon: false },
+      { title: '체험 이벤트 — 다음 달 시작', start: day(20), end: day(50), url: page, img: '', state: 'plan', soon: false },
+      { title: '체험 이벤트 — 다섯 번째', start: day(-1), end: day(60), url: page, img: '', state: 'on', soon: false },
+    ] };
+  },
   myInquiries(db, p, t) { const me = needPartner(db, t); return db.inquiries.filter((q) => q.partnerId === me.id).map(qSummary).sort(byDateDesc); },
   inquiry(db, p, t) {
     const me = needPartner(db, t);

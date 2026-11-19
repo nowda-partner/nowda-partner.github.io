@@ -1,5 +1,6 @@
 // 제휴사 실적 화면. 자료는 실적 시트(nowda-data에서 만든 CSV)를 서버가 읽어 그 업체 것만 보내 준다.
-// 자료 모양: { name, kind, cat, upd, last, thru, pt, m: { 'YYYY-MM': { u, p, s, rv, mo, c: { n, um, pm, b }, d: { fg, age, gender, region } } } }
+// 자료 모양: { name, kind, cat, upd, last, thru, pt, m: { 'YYYY-MM': { u, p, s, rv, mo, pu, c: { n, um, pm, b }, d: { fg, age, gender, region } } } }
+// pu: 진행 중인 달만, 지난달 같은 기간 사용 건수
 import { html, useState, useEffect, useRef } from './lib.js';
 import { useApi, Load, Empty } from './ui.js';
 
@@ -207,22 +208,79 @@ function Dist({ r }) {
   </section>`;
 }
 
-/* ───────── 홈 화면 요약 카드 ───────── */
-export function StatsCard() {
+/* ───────── 홈 화면: 함께한 효과 배너 ─────────
+ * 좋은 소식 문장(전월 대비·재방문·외국인·같은 그룹)은 끝난 달 기준으로만 만든다(진행 중인 달은 숫자가 덜 차 있음).
+ * 아래 흰 줄은 가장 최근 달(진행 중이면 '1~15일'처럼 표기). 비교 기준이 30건 미만이면 %가 아니라 건수로 보여 준다.
+ */
+const MO_MIN = 30;
+
+// 이름 끝 글자에 받침이 있으면 '을', 없으면 '를'
+function objPost(name) {
+  const c = String(name || '').trim().slice(-1).charCodeAt(0) - 0xac00;
+  if (c < 0 || c > 11171) return '을(를)';
+  return c % 28 ? '을' : '를';
+}
+
+function prevYm(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+}
+
+const mOnly = (ym) => `${Number(ym.slice(5))}월`;
+
+export function ImpactBanner({ name }) {
   const st = useApi('p', 'myStats', {}, { cache: 60000 });
   const r = st.data;
-  if (!r || r.status === 'off') return null; // 불러오는 동안이나 연결 전에는 자리를 차지하지 않는다
-  if (r.status !== 'ok') return null;
+  if (!r || r.status !== 'ok' || !monthsOf(r.data).length) {
+    return html`<section class="hello">
+      <h1>${name}님, 안녕하세요.</h1>
+      <p class="muted">나우다 소식과 자주 묻는 질문을 확인하고, 필요한 내용은 1:1 문의로 남겨 주세요.</p>
+    </section>`;
+  }
   const D = r.data, months = monthsOf(D);
-  if (!months.length) return null;
-  const ym = months[months.length - 1], m = D.m[ym] || {};
-  return html`<section class="card">
-    <div class="card-head"><h2>내 실적</h2><a href="#/stats" class="more">자세히 보기</a></div>
-    <div class="muted small st-card-month">${mLabel(D, ym)}</div>
-    <div class="stat-row">
-      <div><span class="num">${m.s ? '-' : fmt(m.u || 0)}</span><span class="lbl">사용 건수</span></div>
-      <div><span class="num">${m.s ? '-' : fmt(m.p || 0)}</span><span class="lbl">이용자 수</span></div>
-    </div>
-    ${m.mo != null && html`<p class="small st-card-mo">전월 대비 <span class=${m.mo > 0 ? 'up' : m.mo < 0 ? 'down' : ''}>${m.mo > 0 ? '▲' : m.mo < 0 ? '▼' : ''} ${fmt(Math.abs(m.mo))}%</span></p>`}
+  const total = months.reduce((s, m) => s + (D.m[m].u || 0), 0);
+
+  // 끝난 달 기준 좋은 소식
+  const done = D.pt ? months.filter((m) => m !== D.last).pop() : D.last;
+  const R = done ? D.m[done] : null;
+  const P = done ? D.m[prevYm(done)] : null;
+  const grow = R && P && P.u >= MO_MIN && R.mo > 0 ? R.mo : null;
+  const back = R && R.rv >= 10 ? Math.round(R.rv / 10) : null;
+  let line;
+  if (grow != null && back) line = html`${mOnly(done)}은 ${mOnly(prevYm(done))}보다 <b>${fmt(grow)}%</b> 더 찾았고, 10명 중 ${back}명은 다시 찾아온 손님입니다.`;
+  else if (grow != null) line = html`${mOnly(done)}은 ${mOnly(prevYm(done))}보다 <b>${fmt(grow)}%</b> 더 찾았습니다.`;
+  else if (back) line = html`${mOnly(done)} 손님 10명 중 ${back}명은 다시 찾아온 손님입니다.`;
+  else line = '나우다 회원들이 꾸준히 찾고 있습니다.';
+  const chips = [];
+  const fg = R?.d?.fg?.find(([k]) => k === '외국인');
+  if (fg && fg[1] > 0) chips.push(html`<span>외국인 손님 <b>${fg[1]}%</b> <small>(${mOnly(done)})</small></span>`);
+  if (R?.c?.b === '상위 25%') chips.push(html`<span>같은 그룹 <b>상위 25%</b> <small>(${mOnly(done)})</small></span>`);
+
+  return html`<section class="impact">
+    <div class="eyebrow">${name}님, 나우다와 함께한 ${months.length}개월</div>
+    <h1>나우다 회원이 ${D.name}${objPost(D.name)}<br /><strong>${fmt(total)}번</strong> 찾았습니다.</h1>
+    <p class="sub">${line}</p>
+    ${chips.length > 0 && html`<div class="impact-chips">${chips}</div>`}
+    <${NowStrip} D=${D} />
   </section>`;
+}
+
+/** 가장 최근 달 한 줄 요약 + 내 실적 버튼 */
+function NowStrip({ D }) {
+  const ym = D.last, r = D.m[ym] || {}, part = isPart(D, ym);
+  const label = part ? `${mOnly(ym)} ${partDays(D)}` : mLabel(D, ym);
+  // 비교 기준 건수: 진행 중인 달은 지난달 같은 기간(pu), 끝난 달은 지난달 전체
+  const base = part ? r.pu : D.m[prevYm(ym)]?.u;
+  const what = part ? '지난달 같은 기간' : '지난달';
+  let cmp = null;
+  if (base != null && base < MO_MIN) {
+    cmp = html`<span>${what} <b>${fmt(base)}</b>건 → <b>${fmt(r.u || 0)}</b>건</span>`;
+  } else if (r.mo != null) {
+    const c = r.mo > 0 ? 'up' : r.mo < 0 ? 'down' : '';
+    cmp = html`<span>${what}보다 <b class=${c}>${r.mo > 0 ? '▲ ' : r.mo < 0 ? '▼ ' : ''}${fmt(Math.abs(r.mo))}%</b></span>`;
+  }
+  return html`<div class="now-strip">
+    <div class="now-txt"><b>${label}</b><span>사용 <b>${fmt(r.u || 0)}</b>건</span><span>이용자 <b>${fmt(r.p || 0)}</b>명</span>${cmp}</div>
+    <a class="now-btn" href="#/stats">내 실적 보기 →</a>
+  </div>`;
 }
