@@ -1,9 +1,9 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611192358';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611192358';
-import { renderBlocks, plain } from './render.js?v=202611192358';
-import { ImpactBanner } from './stats.js?v=202611192358';
-import { GuideCard } from './guide.js?v=202611192358';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611200014';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611200014';
+import { renderBlocks, plain } from './render.js?v=202611200014';
+import { ImpactBanner } from './stats.js?v=202611200014';
+import { GuideCard } from './guide.js?v=202611200014';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -221,9 +221,9 @@ function AboutCard() {
         <a href=${s.url} class="sns-btn" target="_blank" rel="noopener">
           <i style=${{ background: s.color || 'var(--brand)' }}>${s.icon || s.name.slice(0, 1)}</i>
           <span>${s.name}${s.handle && html` <small>${s.handle}</small>`}</span>
-          <span class="go">팔로우 ↗</span>
+          <span class="go">보러 가기 ↗</span>
         </a>`)}</div>
-      <p class="sns-hint">팔로우하면 제휴처 홍보와 이벤트 소식을 먼저 받아 볼 수 있습니다.</p>
+      <p class="sns-hint">제휴사 소개와 이벤트 소식을 올리고 있습니다. 우리 업체가 소개된 게시물은 매장 SNS에도 공유해 보세요.</p>
     </div>`}
   </section>`;
 }

@@ -2,7 +2,7 @@
 // 로그인한 업체가 공영관광지인지 아닌지에 따라 그 업체에 맞는 안내만 보여 준다.
 // 공영관광지가 아닌 업체에는 '민영'이라는 말을 쓰지 않는다.
 // A4 안내문 PDF는 docs/print/pdf/ 에 있다. 원본은 docs/print/guide.html (README 참고).
-import { html, getSession } from './lib.js?v=202611192358';
+import { html, getSession } from './lib.js?v=202611200014';
 
 const IMG = './img/guide/';
 
