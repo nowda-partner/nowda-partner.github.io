@@ -82,7 +82,9 @@ h3 { font-size: 15px; }
 .head-row { display: flex; align-items: center; gap: 24px; height: 60px; }
 .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
 .brand.big { font-size: 20px; margin-bottom: 4px; }
-.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; font-weight: 800; font-size: 16px; }
+/* 나우다 로고(img/nowda-logo.jpg). 글자 N은 그림을 못 불러올 때만 보인다 */
+.logo { width: 32px; height: 32px; border-radius: 8px; background: #fff url('../img/nowda-logo.jpg') center / 112% no-repeat; color: transparent; display: inline-grid; place-items: center; font-weight: 800; font-size: 16px; flex: none; }
+.brand.big .logo { width: 40px; height: 40px; }
 .main-nav { display: flex; gap: 4px; flex: 1; }
 .main-nav a { padding: 8px 12px; border-radius: 8px; font-weight: 600; color: var(--ink-2); }
 .main-nav a:hover { background: var(--line-2); }
