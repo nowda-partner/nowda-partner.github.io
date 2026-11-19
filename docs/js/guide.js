@@ -1,7 +1,7 @@
 // 나우다 회원 응대 안내 (홈 카드 + 상세 화면)
 // 로그인한 업체가 공영관광지인지 민영 제휴사인지에 따라 그 업체에 맞는 안내만 보여 준다.
 // A4 안내문 PDF는 docs/print/pdf/ 에 있다. 원본은 docs/print/guide.html (README 참고).
-import { html, getSession } from './lib.js';
+import { html, getSession } from './lib.js?v=202611192351';
 
 const IMG = './img/guide/';
 
