@@ -103,6 +103,48 @@ function needPartner(db, token) {
   return { id: p.id, name: p.name };
 }
 
+// 체험용 실적(가짜 숫자). 실제 업체 자료는 넣지 않는다.
+function mockStats(me) {
+  const plan = { G001: { kind: '공영', cat: '관광지', base: 420 }, M001: { kind: '민영', cat: '식음료', base: 28 } }[me.id];
+  if (!plan) return { status: 'none' };
+  let seed = me.id.charCodeAt(0) * 31 + Number(me.id.slice(1));
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const today = nowStr().slice(0, 10);
+  const [ty, tm] = today.split('-').map(Number);
+  const m = {};
+  let prev = null;
+  for (let i = 14; i >= 0; i--) {
+    const d = new Date(Date.UTC(ty, tm - 1 - i, 1));
+    const ym = d.toISOString().slice(0, 7);
+    const part = i === 0;
+    const season = 1 + 0.35 * Math.sin((d.getUTCMonth() + 2) / 12 * Math.PI * 2);
+    let u = Math.round(plan.base * season * (0.75 + rnd() * 0.5) * (part ? Number(today.slice(8)) / 30 : 1));
+    if (i === 14) u = Math.round(u * 0.1);
+    const p = Math.max(0, Math.round(u * (0.88 + rnd() * 0.08)));
+    const r = { u, p };
+    if (prev && prev.u) r.mo = Math.round((u - prev.u) / prev.u * 100);
+    const n = plan.base > 100 ? 18 + Math.round(rnd() * 8) : (i > 10 ? 6 : 30);
+    if (n >= 10) {
+      const um = Math.round(u * (0.4 + rnd() * 0.9)), pm = Math.round(um * 0.9);
+      r.c = { n, um, pm, b: u > um * 1.6 ? '상위 25%' : u < um * 0.6 ? '하위 25%' : '중간' };
+    }
+    if (p >= 10 && i < 14) r.rv = Math.round(8 + rnd() * 20);
+    if (p >= 50) {
+      const f = Math.round(85 + rnd() * 10);
+      r.d = {
+        fg: [['내국인', f], ['외국인', 100 - f]],
+        age: [['20대', 22], ['30대', 27], ['40대', 24], ['50대', 15], ['기타', 12]],
+        gender: [['여성', 57], ['남성', 43]],
+        region: [['제주', 18], ['서울', 27], ['경기', 24], ['부산', 7], ['기타', 24]],
+      };
+    }
+    m[ym] = r;
+    prev = r;
+  }
+  const last = Object.keys(m).sort().pop();
+  return { status: 'ok', data: { id: me.id, name: me.name, kind: plan.kind, cat: plan.cat, upd: today, last, thru: today, pt: Number(today.slice(8)) < 28, m } };
+}
+
 function needAdmin(db, token) {
   const s = who(token);
   const a = s && s.r === 'a' && db.admins.find((x) => x.id === s.id);
@@ -183,6 +225,7 @@ const handlers = {
     return { ...summary(n), body: n.body };
   },
   faqs(db, p, t) { needPartner(db, t); return db.faqs.filter((f) => !f.hidden).sort((a, b) => a.order - b.order); },
+  myStats(db, p, t) { return mockStats(needPartner(db, t)); },
   myInquiries(db, p, t) { const me = needPartner(db, t); return db.inquiries.filter((q) => q.partnerId === me.id).map(qSummary).sort(byDateDesc); },
   inquiry(db, p, t) {
     const me = needPartner(db, t);

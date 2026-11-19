@@ -2,6 +2,7 @@
 import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js';
 import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js';
 import { renderBlocks, plain } from './render.js';
+import { StatsCard } from './stats.js';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -52,6 +53,7 @@ export function PartnerLogin() {
 const NAV = [
   ['/', '홈'],
   ['/notices', '소식'],
+  ['/stats', '내 실적'],
   ['/faq', 'FAQ'],
   ['/inquiries', '1:1 문의'],
 ];
@@ -140,6 +142,7 @@ export function Home() {
           : html`<${Empty}>아직 등록된 소식이 없습니다.</${Empty}>`}
       </section>
       <div class="side-col">
+        <${StatsCard} />
         <section class="card">
           <div class="card-head"><h2>내 문의</h2><a href="#/inquiries" class="more">전체 보기</a></div>
           <div class="stat-row">

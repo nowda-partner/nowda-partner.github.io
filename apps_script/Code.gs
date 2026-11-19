@@ -92,6 +92,7 @@ var ACTIONS = {
   myInquiries: function (p, t) { var me = needPartner_(t); return myInquiries_(me); },
   inquiry: function (p, t) { var me = needPartner_(t); return inquiryForPartner_(me, p.id); },
   createInquiry: function (p, t) { var me = needPartner_(t); return createInquiry_(me, p); },
+  myStats: function (p, t) { var me = needPartner_(t); return statsFor_(me.id); },
   file: function (p, t) { return downloadFile_(t, p.inquiryId, p.fileId); },
 
   /* 관리자 */
@@ -232,6 +233,45 @@ function newCode_() {
 
 function normId_(id) {
   return String(id || '').trim().toUpperCase();
+}
+
+/* ───────────────────────── 실적 ─────────────────────────
+ * 실적 자료는 기존 실적 시트(nowda-data 실적 웹앱이 쓰는 시트)의 [실적] 탭을 읽기만 한다.
+ * CSV는 지금처럼 그 시트에만 올리면 되고, 이 포털은 그 시트에 아무것도 쓰지 않는다.
+ * 시트 ID는 스크립트 속성 STATS_SHEET_ID에 있다(시트 메뉴 [나우다 포털 → 실적 시트 연결]).
+ * [실적] 탭: A 업체ID · B 업체명 · C 공영/민영 · D 카테고리 · E 기준월 · F 데이터(JSON)
+ */
+var STATS_TAB = '실적';
+var STATS_VER_SEC = 60; // 실적 시트가 바뀌었는지 이 간격으로 확인한다(CSV를 올리면 1분 안에 반영)
+
+/** 로그인한 업체의 실적 하나만 돌려준다. 다른 업체 행은 읽어도 내보내지 않는다. */
+function statsFor_(id) {
+  var sheetId = prop_('STATS_SHEET_ID', true);
+  if (!sheetId) return { status: 'off' };
+  try {
+    var ver = cached_('statsVer', function () {
+      return { t: DriveApp.getFileById(sheetId).getLastUpdated().getTime() };
+    }, STATS_VER_SEC).t;
+    return cached_('stats:' + id + ':' + ver, function () {
+      var data = findStatsRow_(sheetId, id);
+      return data ? { status: 'ok', data: data } : { status: 'none' };
+    }, CACHE_SEC.content);
+  } catch (e) {
+    console.error(e && e.stack || e);
+    throw new UserError('실적 자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+  }
+}
+
+function findStatsRow_(sheetId, id) {
+  var sh = SpreadsheetApp.openById(sheetId).getSheetByName(STATS_TAB);
+  if (!sh || sh.getLastRow() < 2) return null;
+  var hit = sh.getRange(2, 1, sh.getLastRow() - 1, 1).createTextFinder(id).matchCase(true).matchEntireCell(true).findNext();
+  if (!hit) return null;
+  var v = sh.getRange(hit.getRow(), 1, 1, 6).getValues()[0];
+  if (normId_(v[0]) !== id) return null;
+  var d = parseJson_(String(v[5]), null);
+  if (!d || !d.m || (d.id && normId_(d.id) !== id)) return null; // 다른 업체 자료가 섞이지 않게 한 번 더 확인
+  return d;
 }
 
 /* ───────────────────────── 제휴사 화면 ───────────────────────── */
@@ -900,7 +940,44 @@ function onOpen() {
     .addSeparator()
     .addItem('관리자 추가 / 비밀번호 바꾸기', 'setAdmin')
     .addItem('접속코드 발급 (선택한 업체 행)', 'issueSelected')
+    .addSeparator()
+    .addItem('실적 시트 연결', 'connectStats')
     .addToUi();
+}
+
+/** 실적 시트 주소(또는 ID)를 받아 [실적] 탭을 확인한 뒤 스크립트 속성에 저장한다. 비워 두면 연결을 끊는다. */
+function connectStats() {
+  var ui = SpreadsheetApp.getUi();
+  var props = PropertiesService.getScriptProperties();
+  var cur = props.getProperty('STATS_SHEET_ID') || '';
+  var r = ui.prompt('실적 시트 연결',
+    (cur ? '지금 연결: ' + cur + '\n\n' : '') +
+    '실적 웹앱이 쓰는 구글 시트의 주소를 붙여 넣으세요.\n(docs.google.com/spreadsheets/d/… 주소. 비워 두고 확인을 누르면 연결을 끊습니다)',
+    ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  var text = r.getResponseText().trim();
+  if (!text) {
+    props.deleteProperty('STATS_SHEET_ID');
+    uncache_('statsVer');
+    return ui.alert('실적 시트 연결을 끊었습니다. 제휴사 화면의 실적 메뉴에는 "준비 중"이 보입니다.');
+  }
+  var m = text.match(/\/d\/([A-Za-z0-9_-]{20,})/) || text.match(/^([A-Za-z0-9_-]{20,})$/);
+  if (!m) return ui.alert('시트 주소를 알아보지 못했습니다. 주소 전체를 붙여 넣어 주세요.');
+  var id = m[1];
+  if (id === SpreadsheetApp.getActive().getId()) return ui.alert('이 포털 시트가 아니라 실적 시트의 주소를 넣어 주세요.');
+  var ss, sh;
+  try {
+    ss = SpreadsheetApp.openById(id);
+    sh = ss.getSheetByName(STATS_TAB);
+  } catch (e) {
+    return ui.alert('그 시트를 열 수 없습니다. 이 계정으로 열 수 있는 시트인지 확인해 주세요.');
+  }
+  if (!sh) return ui.alert('[' + STATS_TAB + '] 탭이 없는 시트입니다: ' + ss.getName());
+  var head = sh.getRange(1, 1, 1, 6).getValues()[0].map(String);
+  if (head[0] !== '업체ID' || head[5] !== '데이터') return ui.alert('[' + STATS_TAB + '] 탭의 머리글이 예상과 다릅니다(A열 업체ID, F열 데이터).\n지금 머리글: ' + head.join(', '));
+  props.setProperty('STATS_SHEET_ID', id);
+  uncache_('statsVer');
+  ui.alert('실적 시트를 연결했습니다.\n\n' + ss.getName() + '\n업체 ' + Math.max(sh.getLastRow() - 1, 0) + '곳\n\nCSV는 지금처럼 이 실적 시트에만 올리면 1분 안에 포털에도 반영됩니다.');
 }
 
 function setup() {

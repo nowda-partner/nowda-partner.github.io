@@ -94,12 +94,12 @@ const memo = new Map();
 
 // 읽기만 하는 요청. 이 밖의 요청(저장·수정·삭제·로그인)이 성공하면 기억한 결과를 모두 지운다.
 const READS = new Set([
-  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'file', 'uploadImage', 'uploadNoticeFile',
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats', 'file', 'uploadImage', 'uploadNoticeFile',
   'adminDashboard', 'adminNotices', 'adminNotice', 'adminFaqs', 'adminInquiries', 'adminInquiry', 'adminPartners',
 ]);
 // 결과를 보관해 두었다가 다시 들어올 때 먼저 보여 줄 요청
 const STASHED = new Set([
-  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry',
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats',
   'adminDashboard', 'adminNotices', 'adminFaqs', 'adminInquiries', 'adminPartners',
 ]);
 
