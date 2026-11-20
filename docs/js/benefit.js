@@ -1,8 +1,8 @@
 // 홈 노란 배너 안 '○○에서 제공하는 혜택' 한 줄.
 // 서버가 비짓제주 나우다 혜택 페이지에서 우리 업체 혜택(업체명으로 찾음)을 보내 준다. 못 찾으면 숨긴다.
 // 1단계·2단계 문구가 같으면(띄어쓰기 무시) '모든 회원' 한 칸으로 합친다.
-import { html, nowStr } from './lib.js?v=202611210729';
-import { useApi } from './ui.js?v=202611210729';
+import { html, nowStr } from './lib.js?v=202611210730';
+import { useApi } from './ui.js?v=202611210730';
 
 const same = (a, b) => String(a || '').replace(/\s+/g, '') === String(b || '').replace(/\s+/g, '');
 const dot = (s) => s.replace(/-/g, '.');

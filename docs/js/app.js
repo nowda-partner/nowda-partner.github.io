@@ -1,9 +1,9 @@
 // 화면 연결(라우터)
-import { html, render, useState, useEffect, currentPath, match, getSession, go, CONFIG } from './lib.js?v=202611210729';
-import { Toaster } from './ui.js?v=202611210729';
-import * as P from './partner.js?v=202611210729';
-import { Stats } from './stats.js?v=202611210729';
-import { Guide } from './guide.js?v=202611210729';
+import { html, render, useState, useEffect, currentPath, match, getSession, go, CONFIG } from './lib.js?v=202611210730';
+import { Toaster } from './ui.js?v=202611210730';
+import * as P from './partner.js?v=202611210730';
+import { Stats } from './stats.js?v=202611210730';
+import { Guide } from './guide.js?v=202611210730';
 
 // 관리자 화면 코드는 관리자 주소로 들어왔을 때만 내려받는다.
 let A = null;
@@ -72,7 +72,7 @@ function App() {
   const [loadErr, setLoadErr] = useState(false);
   useEffect(() => {
     if (!needAdmin) return;
-    import('./admin.js?v=202611210729').then((m) => { A = m; setTick((x) => x + 1); }, () => setLoadErr(true));
+    import('./admin.js?v=202611210730').then((m) => { A = m; setTick((x) => x + 1); }, () => setLoadErr(true));
   }, [needAdmin]);
   if (needAdmin) return html`<div class="boot">${loadErr ? '화면을 불러오지 못했습니다. 새로고침해 주세요.' : '불러오는 중…'}</div>`;
 

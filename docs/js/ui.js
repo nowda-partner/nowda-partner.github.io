@@ -1,5 +1,5 @@
 // 공통 화면 조각
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl, api, peek } from './lib.js?v=202611210729';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, cls, isNew, fmtDate, imageUrl, api, peek } from './lib.js?v=202611210730';
 
 /**
  * 데이터를 불러오는 동안·실패했을 때 화면을 대신 그려 주는 도우미.
@@ -112,9 +112,12 @@ export function MockBanner() {
 }
 
 export function Footer() {
+  if (!CONFIG.CONTACT) return null;
+  const mail = CONFIG.CONTACT_EMAIL;
   return html`<footer class="site-foot"><div class="wrap">
-    <span>${CONFIG.SITE_NAME}</span>
-    ${CONFIG.CONTACT && html`<span>문의: ${CONFIG.CONTACT}</span>`}
+    <span>문의: ${CONFIG.CONTACT}</span>
+    ${mail && html`<a href=${'mailto:' + mail}>${mail}</a>`}
+    <a href="#/inquiries/new">1:1 문의</a>
   </div></footer>`;
 }
 

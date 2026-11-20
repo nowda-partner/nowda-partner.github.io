@@ -19,8 +19,9 @@ export const CONFIG = {
   // 새 글 표시 기간(일)
   NEW_DAYS: 3,
 
-  // 담당 연락처(화면 아래쪽에 표시, 비워 두면 숨김)
+  // 담당 연락처(화면 아래쪽 '문의:' 줄에 표시, 비워 두면 숨김). 옆에 이메일과 1:1 문의 링크가 붙습니다.
   CONTACT: '나우다 운영팀',
+  CONTACT_EMAIL: 'nowda@ijto.or.kr',
 
   // 나우다 인스타그램 계정 (홈 오른쪽 인스타그램 카드 머리). 보여 줄 게시물은 관리자 화면 [인스타그램]에서 고릅니다.
   INSTAGRAM: { handle: '@_nowda_', url: 'https://www.instagram.com/_nowda_' },

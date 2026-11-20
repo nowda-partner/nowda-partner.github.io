@@ -1,10 +1,10 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611210729';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611210729';
-import { renderBlocks, plain } from './render.js?v=202611210729';
-import { ImpactBanner } from './stats.js?v=202611210729';
-import { GuideCard } from './guide.js?v=202611210729';
-import { InstagramCard } from './instagram.js?v=202611210729';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611210730';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611210730';
+import { renderBlocks, plain } from './render.js?v=202611210730';
+import { ImpactBanner } from './stats.js?v=202611210730';
+import { GuideCard } from './guide.js?v=202611210730';
+import { InstagramCard } from './instagram.js?v=202611210730';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {

@@ -1,6 +1,6 @@
 // 나우다 인스타그램 게시물 (홈 오른쪽 카드 + 관리자 미리보기에서 함께 씀)
 // 관리자는 게시물 주소만 저장한다. 사진은 인스타그램 공식 퍼가기(embed)로 불러온다.
-import { html, useState, useEffect, useRef, CONFIG } from './lib.js?v=202611210729';
+import { html, useState, useEffect, useRef, CONFIG } from './lib.js?v=202611210730';
 
 const ROLL_MS = 3000; // 다음 게시물로 넘어가는 간격
 // 퍼가기 창에서 사진 위(프로필 줄)와 아래(좋아요·댓글 칸) 높이. 이만큼 잘라 내고 사진만 보여 준다.
