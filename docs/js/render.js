@@ -1,6 +1,6 @@
 // 편집기(Editor.js)로 쓴 본문을 안전한 HTML로 바꾼다.
 import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify@3.4.18/dist/purify.es.mjs';
-import { imageUrl } from './lib.js?v=202611200042';
+import { imageUrl } from './lib.js?v=202611210648';
 
 const INLINE = { ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'a', 'mark', 'code', 'br', 's'], ALLOWED_ATTR: ['href', 'class'] };
 

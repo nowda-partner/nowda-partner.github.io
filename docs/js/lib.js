@@ -1,6 +1,6 @@
 // 공통 도구: 화면 라이브러리, 세션, API 호출, 날짜·파일 도우미
 export { html, render, useState, useEffect, useRef, useMemo, useCallback } from 'https://cdn.jsdelivr.net/npm/htm@3.1.1/preact/standalone.module.js';
-import { CONFIG } from '../config.js?v=202611200042';
+import { CONFIG } from '../config.js?v=202611210648';
 
 export { CONFIG };
 export const IS_MOCK = !CONFIG.API_URL;
@@ -72,7 +72,7 @@ let mockModule = null;
 
 async function send(action, payload, token) {
   if (IS_MOCK) {
-    mockModule ||= await import('./mock.js?v=202611200042');
+    mockModule ||= await import('./mock.js?v=202611210648');
     return mockModule.handle(action, payload, token);
   }
   let res;
@@ -94,13 +94,13 @@ const memo = new Map();
 
 // 읽기만 하는 요청. 이 밖의 요청(저장·수정·삭제·로그인)이 성공하면 기억한 결과를 모두 지운다.
 const READS = new Set([
-  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats', 'file', 'uploadImage', 'uploadNoticeFile',
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats', 'myBenefit', 'file', 'uploadImage', 'uploadNoticeFile',
   'adminDashboard', 'adminNotices', 'adminNotice', 'adminFaqs', 'adminInquiries', 'adminInquiry', 'adminPartners',
   'events', 'adminInstagram',
 ]);
 // 결과를 보관해 두었다가 다시 들어올 때 먼저 보여 줄 요청
 const STASHED = new Set([
-  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats',
+  'home', 'notices', 'notice', 'faqs', 'myInquiries', 'inquiry', 'myStats', 'myBenefit',
   'adminDashboard', 'adminNotices', 'adminFaqs', 'adminInquiries', 'adminPartners', 'adminInstagram', 'events',
 ]);
 

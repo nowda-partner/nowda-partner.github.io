@@ -1,8 +1,8 @@
 // 제휴사 실적 화면. 자료는 실적 시트(nowda-data에서 만든 CSV)를 서버가 읽어 그 업체 것만 보내 준다.
 // 자료 모양: { name, kind, cat, upd, last, thru, pt, m: { 'YYYY-MM': { u, p, s, rv, mo, pu, c: { n, um, pm, b }, d: { fg, age, gender, region } } } }
 // pu: 진행 중인 달만, 지난달 같은 기간 사용 건수
-import { html, useState, useEffect, useRef } from './lib.js?v=202611200042';
-import { useApi, Load, Empty } from './ui.js?v=202611200042';
+import { html, useState, useEffect, useRef } from './lib.js?v=202611210648';
+import { useApi, Load, Empty } from './ui.js?v=202611210648';
 
 const fmt = (n) => Number(n).toLocaleString('ko-KR');
 const ymLabel = (ym) => { const [y, m] = ym.split('-'); return `${y}년 ${Number(m)}월`; };
