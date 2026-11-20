@@ -1,6 +1,6 @@
 // 체험 모드: 서버(앱스 스크립트) 없이 화면을 확인하기 위한 가짜 서버.
 // 데이터는 이 브라우저에만 저장됩니다. config.js에 API_URL을 넣으면 사용되지 않습니다.
-import { nowStr } from './lib.js?v=202611210712';
+import { nowStr } from './lib.js?v=202611210716';
 
 const DB_KEY = 'np_mock_db_v1';
 const STATUS = { open: '접수', doing: '처리중', done: '답변완료' };
@@ -240,18 +240,6 @@ const handlers = {
   myBenefit(db, p, t) {
     needPartner(db, t);
     return { status: 'ok', page: 'https://www.visitjeju.net/kr/nowda/benefit', data: { b1: 'LEVEL 2 이상 전액 감면', b2: '전액 감면(무료입장)', st: '2026-09-29', fn: '2099-12-31', img: '' } };
-  },
-  events(db, p, t) {
-    needPartner(db, t);
-    const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
-    const page = 'https://www.visitjeju.net/kr/nowda/event';
-    return { page, list: [
-      { title: '체험 이벤트 — 마감이 가까운 이벤트', start: day(-12), end: day(5), url: page, img: '', state: 'on', soon: true },
-      { title: '체험 이벤트 — 진행 중인 미션 챌린지', start: day(-3), end: day(25), url: page, img: '', state: 'on', soon: false },
-      { title: '체험 이벤트 — 오래 하는 혜택', start: day(-30), end: day(400), url: page, img: '', state: 'on', soon: false },
-      { title: '체험 이벤트 — 다음 달 시작', start: day(20), end: day(50), url: page, img: '', state: 'plan', soon: false },
-      { title: '체험 이벤트 — 다섯 번째', start: day(-1), end: day(60), url: page, img: '', state: 'on', soon: false },
-    ] };
   },
   myInquiries(db, p, t) { const me = needPartner(db, t); return db.inquiries.filter((q) => q.partnerId === me.id).map(qSummary).sort(byDateDesc); },
   inquiry(db, p, t) {

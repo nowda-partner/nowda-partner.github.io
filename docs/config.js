@@ -22,9 +22,6 @@ export const CONFIG = {
   // 담당 연락처(화면 아래쪽에 표시, 비워 두면 숨김)
   CONTACT: '나우다 운영팀',
 
-  // 나우다 이벤트 페이지. 홈 '진행 중인 나우다 이벤트' 목록은 서버가 이 페이지를 한 시간마다 읽어 옵니다.
-  EVENT_PAGE: 'https://www.visitjeju.net/kr/nowda/event',
-
   // 나우다 인스타그램 계정 (홈 오른쪽 인스타그램 카드 머리). 보여 줄 게시물은 관리자 화면 [인스타그램]에서 고릅니다.
   INSTAGRAM: { handle: '@_nowda_', url: 'https://www.instagram.com/_nowda_' },
 

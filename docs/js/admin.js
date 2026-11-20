@@ -1,9 +1,9 @@
 // 관리자 화면
-import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611210712';
-import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611210712';
-import { InquiryView, Attachments } from './partner.js?v=202611210712';
-import { renderBlocks } from './render.js?v=202611210712';
-import { IgFrame, igEmbedUrl } from './instagram.js?v=202611210712';
+import { html, useState, useEffect, useRef, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, nowStr, toInputDate, imageUrl, cls } from './lib.js?v=202611210716';
+import { useLoad, useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Pager, Field, Badge, Select } from './ui.js?v=202611210716';
+import { InquiryView, Attachments } from './partner.js?v=202611210716';
+import { renderBlocks } from './render.js?v=202611210716';
+import { IgFrame, igEmbedUrl } from './instagram.js?v=202611210716';
 
 /* ───────── 로그인 ───────── */
 export function AdminLogin() {
@@ -151,7 +151,7 @@ function NoticeForm({ initial }) {
 
   useEffect(() => {
     let alive = true;
-    import('./editor.js?v=202611210712')
+    import('./editor.js?v=202611210716')
       .then((m) => m.createEditor(holder.current, initial.body))
       .then((ed) => { if (alive) { editor.current = ed; setEditorState('ready'); } else ed.destroy?.(); })
       .catch((e) => { console.error(e); alive && setEditorState('error'); });
