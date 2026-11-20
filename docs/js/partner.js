@@ -1,10 +1,10 @@
 // 제휴사 화면
-import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611210648';
-import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611210648';
-import { renderBlocks, plain } from './render.js?v=202611210648';
-import { ImpactBanner } from './stats.js?v=202611210648';
-import { GuideCard } from './guide.js?v=202611210648';
-import { InstagramCard } from './instagram.js?v=202611210648';
+import { html, useState, useEffect, useMemo, CONFIG, IS_MOCK, api, go, getSession, setSession, clearSession, seed, warmUp, fmtDate, fmtSize, compressImage, fileToBase64, downloadBase64, storeGet, storeSet, nowStr, imageUrl, cls } from './lib.js?v=202611210708';
+import { useApi, Load, Loading, Empty, NoticeBadges, StatusBadge, Thumb, Modal, toast, MockBanner, Footer, Pager, Field, Select } from './ui.js?v=202611210708';
+import { renderBlocks, plain } from './render.js?v=202611210708';
+import { ImpactBanner } from './stats.js?v=202611210708';
+import { GuideCard } from './guide.js?v=202611210708';
+import { InstagramCard } from './instagram.js?v=202611210708';
 
 /* ───────── 로그인 ───────── */
 export function PartnerLogin() {
@@ -134,7 +134,6 @@ export function Home() {
         ${d.urgent.map((n) => html`<a href=${'#/notices/' + n.id}><strong>긴급</strong><span>${n.title}</span><span class="arrow">→</span></a>`)}
       </div>`}
     <${ImpactBanner} name=${d.me.name} />
-    <${BenefitCard} />
     <${GuideCard} />
     <div class="home-grid">
       <div class="main-col">
@@ -163,31 +162,6 @@ export function Home() {
     </div>
     <${AboutCard} />`}
   </${Load}>`;
-}
-
-/* ───────── 홈: 우리 업체 혜택 ─────────
- * 비짓제주 나우다 혜택 페이지에 올라간 우리 업체 혜택을 서버가 업체ID로 찾아 보내 준다.
- * 못 읽었거나 페이지에 없는 업체면 카드를 숨긴다.
- */
-function BenefitCard() {
-  const st = useApi('p', 'myBenefit', {}, { cache: 600000 });
-  const r = st.data;
-  if (!r || r.status !== 'ok') return null;
-  const b = r.data;
-  const rows = [['Level 1 회원', b.b1], ['Level 2 이상 회원', b.b2]].filter(([, t]) => t);
-  if (!rows.length) return null;
-  const today = nowStr().slice(0, 10);
-  const open = b.fn && b.fn < '2099-01-01';
-  const period = b.st && b.st > today ? `${b.st.replace(/-/g, '.')}부터` : open ? `${b.fn.replace(/-/g, '.')}까지` : '';
-  return html`<section class="card benefit">
-    <div class="card-head">
-      <h2>나우다 회원에게 제공하는 혜택</h2>
-      <a href=${r.page} class="more" target="_blank" rel="noopener">비짓제주 혜택 페이지 ↗</a>
-    </div>
-    <dl class="bn-list">${rows.map(([k, t]) => html`<div><dt>${k}</dt><dd>${t}</dd></div>`)}</dl>
-    ${period && html`<p class="bn-period">제공 기간 ${period}</p>`}
-    <p class="ev-hint">비짓제주 나우다 혜택 페이지에 올라간 내용입니다. 실제와 다르면 <a href="#/inquiries/new">1:1 문의</a>(정보 수정 요청)로 알려 주세요.</p>
-  </section>`;
 }
 
 /* ───────── 홈: 나우다 이벤트 ─────────

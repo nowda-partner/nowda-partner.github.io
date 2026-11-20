@@ -1,8 +1,9 @@
 // 제휴사 실적 화면. 자료는 실적 시트(nowda-data에서 만든 CSV)를 서버가 읽어 그 업체 것만 보내 준다.
 // 자료 모양: { name, kind, cat, upd, last, thru, pt, m: { 'YYYY-MM': { u, p, s, rv, mo, pu, c: { n, um, pm, b }, d: { fg, age, gender, region } } } }
 // pu: 진행 중인 달만, 지난달 같은 기간 사용 건수
-import { html, useState, useEffect, useRef } from './lib.js?v=202611210648';
-import { useApi, Load, Empty } from './ui.js?v=202611210648';
+import { html, useState, useEffect, useRef } from './lib.js?v=202611210708';
+import { useApi, Load, Empty } from './ui.js?v=202611210708';
+import { BenefitStrip } from './benefit.js?v=202611210708';
 
 const fmt = (n) => Number(n).toLocaleString('ko-KR');
 const ymLabel = (ym) => { const [y, m] = ym.split('-'); return `${y}년 ${Number(m)}월`; };
@@ -235,6 +236,7 @@ export function ImpactBanner({ name }) {
     return html`<section class="hello">
       <h1>${name}님, 안녕하세요.</h1>
       <p class="muted">나우다 소식과 자주 묻는 질문을 확인하고, 필요한 내용은 1:1 문의로 남겨 주세요.</p>
+      <${BenefitStrip} name=${name} />
     </section>`;
   }
   const D = r.data, months = monthsOf(D);
@@ -261,6 +263,7 @@ export function ImpactBanner({ name }) {
     <h1>나우다 회원이 ${D.name}${objPost(D.name)}<br /><strong>${fmt(total)}번</strong> 찾았습니다.</h1>
     <p class="sub">${line}</p>
     ${chips.length > 0 && html`<div class="impact-chips">${chips}</div>`}
+    <${BenefitStrip} name=${name} />
     <${NowStrip} D=${D} />
   </section>`;
 }

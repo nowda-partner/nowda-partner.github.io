@@ -1,6 +1,6 @@
 // 체험 모드: 서버(앱스 스크립트) 없이 화면을 확인하기 위한 가짜 서버.
 // 데이터는 이 브라우저에만 저장됩니다. config.js에 API_URL을 넣으면 사용되지 않습니다.
-import { nowStr } from './lib.js?v=202611210648';
+import { nowStr } from './lib.js?v=202611210708';
 
 const DB_KEY = 'np_mock_db_v1';
 const STATUS = { open: '접수', doing: '처리중', done: '답변완료' };
@@ -239,7 +239,7 @@ const handlers = {
   myStats(db, p, t) { return mockStats(needPartner(db, t)); },
   myBenefit(db, p, t) {
     needPartner(db, t);
-    return { status: 'ok', page: 'https://www.visitjeju.net/kr/nowda/benefit', data: { b1: 'LEVEL 2 이상 전액 감면', b2: '전액 감면(무료입장)', st: '2026-09-29', fn: '2099-12-31' } };
+    return { status: 'ok', page: 'https://www.visitjeju.net/kr/nowda/benefit', data: { b1: 'LEVEL 2 이상 전액 감면', b2: '전액 감면(무료입장)', st: '2026-09-29', fn: '2099-12-31', img: '' } };
   },
   events(db, p, t) {
     needPartner(db, t);
